@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Payment Verification | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-page-heading"><div><h1>Payment verification</h1><p>Review submitted evidence before funds affect escrow.</p></div></div>
+<section class="tp-card tp-section"><div style="overflow-x:auto"><table class="tp-table"><thead><tr><th>Transaction</th><th>Buyer</th><th>Channel</th><th>Reference</th><th>Amount</th><th>Evidence</th><th>Submitted</th><th>Status</th><th></th></tr></thead><tbody>{% for payment in payments %}<tr><td>{{ payment.transaction.reference|default:payment.transaction_id }}</td><td>{{ payment.transaction.buyer }}</td><td>{{ payment.get_channel_display }}</td><td>{{ payment.reference }}</td><td>{{ payment.currency }} {{ payment.amount }}</td><td>{% if payment.receipt %}<a href="{{ payment.receipt.file.url }}" target="_blank" rel="noopener">View receipt</a>{% else %}None{% endif %}</td><td>{{ payment.createdAt|date:'d M Y H:i' }}</td><td>{{ payment.get_status_display }}</td><td><a class="tp-btn tp-btn--secondary" href="{% url 'payment-review' payment.pk %}">Review</a></td></tr>{% empty %}<tr><td colspan="9">No payments require verification.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

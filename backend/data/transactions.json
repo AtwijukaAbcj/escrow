@@ -1,0 +1,228 @@
+[
+  {
+    "id": "txn-1",
+    "buyerId": "party-1",
+    "sellerId": "party-2",
+    "description": "Vehicle purchase escrow for Toyota Prado",
+    "value": 140000000,
+    "status": "pending_payment",
+    "contract": {
+      "id": "contract-1",
+      "title": "Vehicle Purchase Agreement",
+      "description": "Buyer deposits funds to escrow while seller verifies vehicle ownership documents.",
+      "terms": "Seller provides authentic vehicle documents and completes ownership transfer before funds are released.",
+      "signedByBuyer": false,
+      "signedBySeller": false,
+      "createdAt": "2026-08-12T18:22:55.788Z"
+    },
+    "milestones": [
+      {
+        "id": "ms-1",
+        "title": "Vehicle documents verified",
+        "amount": 42000000,
+        "completed": false
+      },
+      {
+        "id": "ms-2",
+        "title": "Ownership transfer initiated",
+        "amount": 84000000,
+        "completed": false
+      },
+      {
+        "id": "ms-3",
+        "title": "Vehicle delivered and approved",
+        "amount": 14000000,
+        "completed": false
+      }
+    ],
+    "escrowBalance": 0,
+    "createdAt": "2026-08-12T18:22:55.791Z",
+    "events": [
+      {
+        "timestamp": "2026-08-12T18:22:55.791Z",
+        "action": "created",
+        "details": "Seed transaction created"
+      },
+      {
+        "timestamp": "2026-08-12T18:29:42.331Z",
+        "actorId": "cce30b23-94a3-46b5-bbdb-659dd75692d0",
+        "action": "document_uploaded",
+        "details": "ID Front"
+      },
+      {
+        "timestamp": "2026-08-12T18:29:42.677Z",
+        "actorId": "admin-seed-user",
+        "action": "document_verified",
+        "details": "ID Front => verified"
+      },
+      {
+        "timestamp": "2026-08-12T19:08:02.456Z",
+        "actorId": "admin-seed-user",
+        "action": "document_uploaded",
+        "details": "Proof of Ownership"
+      }
+    ],
+    "documents": [
+      {
+        "id": "7d9ad9ca-75e4-4c2c-b7f2-34df525917ce",
+        "name": "ID Front",
+        "type": "id",
+        "uploadedBy": "cce30b23-94a3-46b5-bbdb-659dd75692d0",
+        "status": "verified",
+        "createdAt": "2026-08-12T18:29:42.331Z",
+        "comment": "Matches ID",
+        "verifiedBy": "admin-seed-user",
+        "verifiedAt": "2026-08-12T18:29:42.677Z"
+      },
+      {
+        "id": "eb9f7fab-0b20-4678-b68d-3ea635a1a27a",
+        "name": "Proof of Ownership",
+        "type": "title",
+        "uploadedBy": "admin-seed-user",
+        "status": "submitted",
+        "createdAt": "2026-08-12T19:08:02.456Z"
+      }
+    ]
+  },
+  {
+    "id": "7ec891df-f1eb-4208-b02a-fe8773934dfc",
+    "buyerId": "party-1",
+    "sellerId": "b8a23810-624d-4389-a5b3-5a22556a8bb5",
+    "description": "Test tx creating seller pending.user.1@example.com",
+    "value": 1000,
+    "status": "awaiting_acceptance",
+    "contract": {
+      "id": "5efc3e7b-4dd6-4aab-a795-2270d3d72112",
+      "title": "TrustPay Escrow Contract",
+      "description": "Test tx creating seller pending.user.1@example.com",
+      "terms": "Funds remain in escrow until all milestones are completed and approved.",
+      "signedByBuyer": false,
+      "signedBySeller": false,
+      "createdAt": "2026-08-12T19:32:07.056Z"
+    },
+    "milestones": [
+      {
+        "id": "33259941-03bb-4567-ae3c-c114ae504549",
+        "title": "Document verification",
+        "amount": 500,
+        "completed": false
+      },
+      {
+        "id": "56ec26b8-37ce-4d47-a937-ef2e8bf44d15",
+        "title": "Milestone approval",
+        "amount": 300,
+        "completed": false
+      },
+      {
+        "id": "c706db36-bb91-452c-876b-b9eb639c7e15",
+        "title": "Final release",
+        "amount": 200,
+        "completed": false
+      }
+    ],
+    "escrowBalance": 0,
+    "createdAt": "2026-08-12T19:32:07.056Z",
+    "events": [
+      {
+        "timestamp": "2026-08-12T19:32:07.057Z",
+        "actorId": "admin-seed-user",
+        "action": "created",
+        "details": "Transaction created"
+      }
+    ]
+  },
+  {
+    "id": "528bfb89-364b-4fb5-acbc-794a8434e8a0",
+    "buyerId": "party-1",
+    "sellerId": "9ba092ba-10e7-495b-9c57-8ba99b2775b7",
+    "description": "Test tx creating seller pending.user.2@example.com",
+    "value": 1000,
+    "status": "awaiting_acceptance",
+    "contract": {
+      "id": "dbd43086-54cf-4719-b801-6d569a197547",
+      "title": "TrustPay Escrow Contract",
+      "description": "Test tx creating seller pending.user.2@example.com",
+      "terms": "Funds remain in escrow until all milestones are completed and approved.",
+      "signedByBuyer": false,
+      "signedBySeller": false,
+      "createdAt": "2026-08-12T19:32:07.067Z"
+    },
+    "milestones": [
+      {
+        "id": "fec9c498-89c6-4a27-9ce8-85cb1e0bcee9",
+        "title": "Document verification",
+        "amount": 500,
+        "completed": false
+      },
+      {
+        "id": "445ef97b-371c-4da0-a325-db0f2f5c5029",
+        "title": "Milestone approval",
+        "amount": 300,
+        "completed": false
+      },
+      {
+        "id": "db3d9968-4b06-4d56-af1c-29524a97c219",
+        "title": "Final release",
+        "amount": 200,
+        "completed": false
+      }
+    ],
+    "escrowBalance": 0,
+    "createdAt": "2026-08-12T19:32:07.067Z",
+    "events": [
+      {
+        "timestamp": "2026-08-12T19:32:07.067Z",
+        "actorId": "admin-seed-user",
+        "action": "created",
+        "details": "Transaction created"
+      }
+    ]
+  },
+  {
+    "id": "d347c0a3-973e-48d7-a401-8e20bab6459c",
+    "buyerId": "party-1",
+    "sellerId": "3d908b12-10c5-47d9-8d74-5fbc0152472c",
+    "description": "Test tx creating seller pending.user.3@example.com",
+    "value": 1000,
+    "status": "awaiting_acceptance",
+    "contract": {
+      "id": "24fe2aa7-0e1f-47f2-9dd5-059b38a2c24e",
+      "title": "TrustPay Escrow Contract",
+      "description": "Test tx creating seller pending.user.3@example.com",
+      "terms": "Funds remain in escrow until all milestones are completed and approved.",
+      "signedByBuyer": false,
+      "signedBySeller": false,
+      "createdAt": "2026-08-12T19:32:07.081Z"
+    },
+    "milestones": [
+      {
+        "id": "73f48a64-9246-484f-a93d-1193ad41563a",
+        "title": "Document verification",
+        "amount": 500,
+        "completed": false
+      },
+      {
+        "id": "b8da8a56-793c-4ee3-92a2-e546c2ee344e",
+        "title": "Milestone approval",
+        "amount": 300,
+        "completed": false
+      },
+      {
+        "id": "77f1e40a-d999-4be1-b5c7-a88f9e580f5e",
+        "title": "Final release",
+        "amount": 200,
+        "completed": false
+      }
+    ],
+    "escrowBalance": 0,
+    "createdAt": "2026-08-12T19:32:07.081Z",
+    "events": [
+      {
+        "timestamp": "2026-08-12T19:32:07.081Z",
+        "actorId": "admin-seed-user",
+        "action": "created",
+        "details": "Transaction created"
+      }
+    ]
+  }
+]

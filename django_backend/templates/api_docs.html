@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}API documentation | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-page-heading">
+    <div>
+        <h1>API documentation</h1>
+        <p>Internal reference for authenticating and integrating with TrustPay Africa services.</p>
+    </div>
+    <a class="tp-btn tp-btn--secondary" href="{% url 'dashboard' %}">Back to dashboard</a>
+</div>
+
+<div class="tp-card tp-section" style="margin-bottom: 24px;">
+    <h3 style="margin-top: 0;">Setup</h3>
+    <ol style="margin: 12px 0 0; padding-left: 18px; color: var(--brand-dark); line-height: 1.8;">
+        <li>Start the Django server from the project folder with <strong>python manage.py runserver 0.0.0.0:8000</strong>.</li>
+        <li>Use the login flow to obtain a JWT pair from <strong>/auth/login/</strong>.</li>
+        <li>Attach the access token to the <strong>Authorization: Bearer ...</strong> header for protected requests.</li>
+        <li>Use the refresh endpoint when the access token expires, then continue with the same workflow.</li>
+    </ol>
+</div>
+
+<div class="tp-card tp-section">
+    <h3 style="margin-top: 0;">Endpoint reference</h3>
+    <table class="tp-table" style="margin-top: 16px;">
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for endpoint in api_endpoints %}
+            <tr>
+                <td><span class="tp-badge tp-badge--neutral">{{ endpoint.method }}</span></td>
+                <td><code>{{ endpoint.path }}</code></td>
+                <td>{{ endpoint.description }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No API endpoints available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

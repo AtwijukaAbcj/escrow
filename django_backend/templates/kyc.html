@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}KYC Review | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
+        <div>
+            <h2 style="margin:0; font-size:1.25rem;">KYC review queue</h2>
+            <p style="margin:8px 0 0; color:#5f6d7a;">Review participants, verify identity status, and track compliance actions.</p>
+        </div>
+        <a class="tp-btn tp-btn--secondary" href="{% url 'kyc-overview' %}">Compliance overview</a>
+    </div>
+
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Participant</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in parties %}
+            <tr>
+                <td>{{ item.displayName|default:'Unknown party' }}</td>
+                <td>{{ item.email|default:'—' }}</td>
+                <td>{{ item.role|default:'—'|title }}</td>
+                <td><span class="tp-badge tp-badge--{% if item.kycVerified %}success{% elif item.kyc_submission and item.kyc_submission.verificationStatus == 'rejected' %}danger{% else %}warning{% endif %}">{% if item.kycVerified %}Verified{% elif item.kyc_submission %}{{ item.kyc_submission.get_verificationStatus_display }}{% else %}Pending{% endif %}</span></td>
+                <td><a href="{% url 'kyc-review' item.id %}" class="tp-btn tp-btn--secondary" style="padding:8px 12px;">Review</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No KYC records available.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

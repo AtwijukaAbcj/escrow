@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
+        <div>
+            <h2 style="margin:0; font-size:1.25rem;">Escrow transactions</h2>
+            <p style="margin:8px 0 0; color:#5f6d7a;">Track the status of buyer/seller funds and release approvals.</p>
+        </div>
+        {% if 'transactions.create' in user_permissions %}<a class="tp-btn" href="{% url 'transaction-create' %}">Create transaction</a>{% endif %}
+    </div>
+
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Reference</th>
+                <th>Buyer</th>
+                <th>Seller</th>
+                <th>Value</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in transactions %}
+            <tr>
+                <td><a href="{% url 'transaction-detail' item.id %}">{{ item.reference|default:item.id }}</a><div class="tp-muted" style="font-size:.75rem;">{{ item.title|default:'Untitled transaction' }}</div></td>
+                <td>{{ item.buyer.user.get_full_name|default:item.buyer.user.email }}</td>
+                <td>{{ item.seller.user.get_full_name|default:item.seller.user.email }}</td>
+                <td>{{ item.currency }} {{ item.value }}</td>
+                <td><span class="tp-badge tp-badge--{% if item.status == 'completed' %}success{% elif item.status == 'awaiting_acceptance' %}warning{% else %}neutral{% endif %}">{{ item.status|title }}</span></td>
+                <td>{{ item.createdAt|date:'d M Y' }}</td>
+                <td><a class="tp-btn tp-btn--secondary" style="padding:8px 12px;" href="{% url 'transaction-detail' item.id %}">Review</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">No transactions are available yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

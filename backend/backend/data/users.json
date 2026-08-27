@@ -1,0 +1,50 @@
+[
+  {
+    "id": "69275e14-680a-4871-81e5-6b0cd5ae4a11",
+    "tenantId": "default-tenant",
+    "email": "atwijukabrendan@gmail.com",
+    "phoneNumber": "+256752431368",
+    "name": "Tenant One",
+    "passwordHash": "$2b$12$joYoo8YhUvMwxU1r1sT9Cu7UAd.2QEwrmpdpZ8Fu/65KJ6rXNMLLW",
+    "roles": [
+      "seller"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-05T17:21:44.136Z",
+    "updatedAt": "2026-08-05T17:21:44.136Z"
+  },
+  {
+    "id": "abacd9e9-7de9-4ab6-99e7-81294ae09df0",
+    "tenantId": "default-tenant",
+    "email": "diag_buyer@example.com",
+    "phoneNumber": "+256700000000",
+    "name": "Diag Buyer",
+    "passwordHash": "$2b$12$ii851OFFwKGo7MiQPYOMC.3535LiWbr8mKOWPyjkh2rtmZhA3Wbky",
+    "roles": [
+      "buyer"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T00:35:27.520Z",
+    "updatedAt": "2026-08-06T00:35:27.520Z"
+  },
+  {
+    "id": "816c5ec8-484b-4f74-9d4c-8944e2163f98",
+    "tenantId": "default-tenant",
+    "email": "atwijuka@gmail.com",
+    "phoneNumber": "atwijukabrendan@gmail.com",
+    "name": "Atwijuka Brendan",
+    "passwordHash": "$2b$12$kMTZTa2i0Hix4L.UvB9vY.dxSJFPFqnzrMVfAyk/fVQG2R1ZRRudO",
+    "roles": [
+      "ROLE_USER"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T02:09:29.082Z",
+    "updatedAt": "2026-08-06T02:09:29.082Z"
+  }
+]

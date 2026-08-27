@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Users | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+        <div>
+            <h1 style="margin:0; font-size:1.35rem;">Users and roles</h1>
+            <p style="margin:8px 0 0; color:#5f6d7a;">Manage staff, clients, and providers.</p>
+        </div>
+        <a class="tp-btn" href="{% url 'users:create' %}">Create user</a>
+    </div>
+    <form method="get" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+        <input name="q" value="{{ query }}" placeholder="Search username or email" style="flex:1; min-width:220px; border:1px solid rgba(15,23,42,.12); border-radius:10px; padding:10px 12px;">
+        <select name="role" style="border:1px solid rgba(15,23,42,.12); border-radius:10px; padding:10px 12px;">
+            <option value="">All roles</option>
+            {% for role in roles %}<option value="{{ role.name }}"{% if selected_role == role.name %} selected{% endif %}>{{ role.name }}</option>{% endfor %}
+        </select>
+        <button class="tp-btn tp-btn--secondary" type="submit">Search</button>
+    </form>
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Permission role</th>
+                <th>Party</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for managed_user in managed_users %}
+            <tr>
+                <td>{{ managed_user.username }}</td>
+                <td>{{ managed_user.get_full_name|default:'-' }}</td>
+                <td>{{ managed_user.email|default:'-' }}</td>
+                <td>{% if managed_user.is_superuser %}Admin{% elif managed_user.profile.role == 'staff' or managed_user.is_staff %}Staff{% else %}{{ managed_user.profile.get_role_display|default:'Unassigned' }}{% endif %}</td>
+                <td>{% for assignment in managed_user.assigned_roles.all %}{{ assignment.role.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
+                <td>{{ managed_user.profile.party.displayName|default:'-' }}</td>
+                <td>{% if managed_user.is_active %}<span class="tp-badge tp-badge--success">Active</span>{% else %}<span class="tp-badge tp-badge--danger">Inactive</span>{% endif %} <a href="{% url 'users:user-roles' managed_user.id %}">Manage</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">No users have been created yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

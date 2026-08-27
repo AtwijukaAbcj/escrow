@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}KYC / KYB Overview | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-page-heading">
+    <div>
+        <h1>KYC / KYB overview</h1>
+        <p>Track participant verification, compliance state, and actions due.</p>
+    </div>
+</div>
+
+<div class="tp-summary-grid">
+    <div class="tp-stat tp-card"><span class="tp-stat__label">Pending review</span><div class="tp-stat__value">{{ pending_review }}</div></div>
+    <div class="tp-stat tp-card"><span class="tp-stat__label">Pending</span><div class="tp-stat__value">{{ pending }}</div></div>
+    <div class="tp-stat tp-card"><span class="tp-stat__label">Reverification due</span><div class="tp-stat__value">{{ reverification_due }}</div></div>
+    <div class="tp-stat tp-card"><span class="tp-stat__label">Restricted / suspended</span><div class="tp-stat__value">{{ restricted|add:suspended }}</div></div>
+    <div class="tp-stat tp-card"><span class="tp-stat__label">Verified / cleared</span><div class="tp-stat__value">{{ verified }}</div></div>
+</div>
+
+<section class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:18px;">
+        <div>
+            <h2 style="margin:0; font-size:1.25rem;">Review queue</h2>
+            <p style="margin:8px 0 0; color:#5f6d7a;">Operational compliance overview for individual and business onboarding.</p>
+        </div>
+        <a class="tp-btn tp-btn--secondary" href="{% url 'kyc' %}">Go to queue</a>
+    </div>
+
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Participant</th>
+                <th>Type</th>
+                <th>Compliance</th>
+                <th>Risk</th>
+                <th>Reverification</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in parties %}
+            <tr>
+                <td><a href="{% url 'kyc-review' item.id %}">{{ item.displayName|default:'Unknown party' }}</a></td>
+                <td>{{ item.get_partyType_display|default:'Individual' }}</td>
+                <td>{{ item.get_complianceStatus_display|default:'Not Cleared' }}</td>
+                <td>{{ item.get_riskLevel_display|default:'Low' }}</td>
+                <td>{% if item.needsReverification %}Due{% else %}Not due{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No compliance records available.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

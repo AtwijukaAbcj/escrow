@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}{{ heading }} | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-card tp-section"><div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap;"><div><h1 style="margin:0; font-size:1.4rem;">{{ heading }}</h1><p class="tp-muted">{{ description }}</p></div><a class="tp-btn" href="{% url create_url %}">Create {{ heading|lower|cut:'s' }}</a></div><table class="tp-table" style="margin-top:24px;"><thead><tr><th>Name</th><th>Code</th><th>Status</th></tr></thead><tbody>{% for item in items %}<tr><td>{{ item.name }}</td><td>{{ item.code }}</td><td><span class="tp-badge tp-badge--success">Active</span></td></tr>{% empty %}<tr><td colspan="3">No records created yet.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Review KYC | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+        <div>
+            <h1 style="margin:0; font-size:1.45rem;">Review identity verification</h1>
+            <p style="margin:8px 0 0; color:#5f6d7a;">{{ party.displayName }}{% if party.email %} · {{ party.email }}{% endif %}</p>
+        </div>
+        <a class="tp-btn tp-btn--secondary" href="{% url 'kyc' %}">Back to queue</a>
+    </div>
+    {% if submission %}
+    <div class="tp-form-grid">
+        <div class="tp-field"><strong>Identification type</strong><div>{{ submission.get_idType_display }}</div></div>
+        <div class="tp-field"><strong>NIN</strong><div>{{ submission.nin|default:'Not supplied' }}</div></div>
+        <div class="tp-field"><strong>ID number</strong><div>{{ submission.idNumber|default:'Not supplied' }}</div></div>
+        <div class="tp-field"><strong>Date of birth</strong><div>{{ submission.dateOfBirth|default:'Not supplied' }}</div></div>
+        <div class="tp-field" style="grid-column:1 / -1;"><strong>Address</strong><div>{{ submission.address|default:'Not supplied' }}</div></div>
+    </div>
+    <div style="margin-top:24px;">
+        <strong>Identification image</strong>
+        <div style="margin-top:10px;"><a href="{{ submission.idImage.url }}" target="_blank" rel="noopener"><img src="{{ submission.idImage.url }}" alt="Submitted identification" style="max-width:100%; max-height:420px; border:1px solid var(--brand-line); border-radius:10px;"></a></div>
+    </div>
+    <form method="post" style="margin-top:24px;">
+        {% csrf_token %}
+        <div class="tp-field"><label for="comment">Review comment</label><textarea id="comment" name="comment" rows="3" style="width:100%; box-sizing:border-box; padding:12px; border:1px solid rgba(15,23,42,.12); border-radius:10px;"></textarea></div>
+        <div style="display:flex; gap:12px; margin-top:16px;">
+            <button class="tp-btn" name="decision" value="verified" type="submit">Approve KYC</button>
+            <button class="tp-btn tp-btn--secondary" name="decision" value="rejected" type="submit">Reject KYC</button>
+        </div>
+    </form>
+    {% else %}
+    <p>No KYC submission has been received for this participant.</p>
+    {% endif %}
+</div>
+{% endblock %}

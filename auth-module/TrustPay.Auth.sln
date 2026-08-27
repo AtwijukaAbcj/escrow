@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33424.307
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrustPay.Auth.Api", "src\TrustPay.Auth.Api\TrustPay.Auth.Api.csproj", "{4A8C1F71-2B4F-439B-91D7-1F8A969C98DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrustPay.Auth.Application", "src\TrustPay.Auth.Application\TrustPay.Auth.Application.csproj", "{E5D7C715-7F57-4BD9-83C6-3795DDDA3B22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrustPay.Auth.Domain", "src\TrustPay.Auth.Domain\TrustPay.Auth.Domain.csproj", "{A1F8AE4F-3E75-4F8F-8BAE-3B7F9EB58D31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrustPay.Auth.Infrastructure", "src\TrustPay.Auth.Infrastructure\TrustPay.Auth.Infrastructure.csproj", "{D81A6D1D-87DB-4D22-9E72-2308A375D9F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrustPay.Auth.Common", "src\TrustPay.Auth.Common\TrustPay.Auth.Common.csproj", "{B60E85C5-9204-4F2A-8D6F-028BBAE3DC85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrustPay.Auth.UnitTests", "tests\TrustPay.Auth.UnitTests\TrustPay.Auth.UnitTests.csproj", "{C9052C13-3E4B-4EE8-94DE-73CC01F206B3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4A8C1F71-2B4F-439B-91D7-1F8A969C98DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A8C1F71-2B4F-439B-91D7-1F8A969C98DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A8C1F71-2B4F-439B-91D7-1F8A969C98DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A8C1F71-2B4F-439B-91D7-1F8A969C98DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5D7C715-7F57-4BD9-83C6-3795DDDA3B22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5D7C715-7F57-4BD9-83C6-3795DDDA3B22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5D7C715-7F57-4BD9-83C6-3795DDDA3B22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5D7C715-7F57-4BD9-83C6-3795DDDA3B22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1F8AE4F-3E75-4F8F-8BAE-3B7F9EB58D31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1F8AE4F-3E75-4F8F-8BAE-3B7F9EB58D31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1F8AE4F-3E75-4F8F-8BAE-3B7F9EB58D31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1F8AE4F-3E75-4F8F-8BAE-3B7F9EB58D31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D81A6D1D-87DB-4D22-9E72-2308A375D9F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D81A6D1D-87DB-4D22-9E72-2308A375D9F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D81A6D1D-87DB-4D22-9E72-2308A375D9F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D81A6D1D-87DB-4D22-9E72-2308A375D9F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B60E85C5-9204-4F2A-8D6F-028BBAE3DC85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B60E85C5-9204-4F2A-8D6F-028BBAE3DC85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B60E85C5-9204-4F2A-8D6F-028BBAE3DC85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B60E85C5-9204-4F2A-8D6F-028BBAE3DC85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9052C13-3E4B-4EE8-94DE-73CC01F206B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9052C13-3E4B-4EE8-94DE-73CC01F206B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9052C13-3E4B-4EE8-94DE-73CC01F206B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9052C13-3E4B-4EE8-94DE-73CC01F206B3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

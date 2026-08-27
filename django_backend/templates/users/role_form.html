@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Create role | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-page-heading"><div><h1>Create Role</h1><p>Define a role and control exactly what it can access.</p></div><a class="tp-btn tp-btn--secondary" href="{% url 'users:roles' %}">Back to roles</a></div>
+<form method="post" class="tp-split-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
+    <section class="tp-card tp-form-panel">
+        <div class="tp-panel-heading">Role details</div>
+        <div class="tp-panel-body">
+            <div class="tp-field">{{ form.name.label_tag }}{{ form.name }}{% for error in form.name.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>
+            <div class="tp-field">{{ form.description.label_tag }}{{ form.description }}{% for error in form.description.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>
+            <label class="tp-check-row">{{ form.is_active }} <span>Active role</span></label>
+        </div>
+        <div class="tp-panel-actions"><button class="tp-btn" type="submit">Save role</button><a class="tp-btn tp-btn--secondary" href="{% url 'users:roles' %}">Cancel</a></div>
+    </section>
+    <section class="tp-card tp-form-panel tp-permissions-panel">
+        <div class="tp-panel-heading"><span>Permissions</span><label class="tp-tree-select-all"><input type="checkbox" id="select-all-permissions"> Select all</label></div>
+        <div class="tp-panel-body">
+            {% if permission_groups %}
+                {% for module_group in permission_groups %}
+                <div class="tp-module-group">
+                    <div class="tp-module-heading"><strong>{{ module_group.module_name|upper }}</strong><span>{{ module_group.module_code }} module</span><label class="tp-module-select"><input type="checkbox" class="select-module-permissions"> Select module</label></div>
+                    <div class="tp-permission-list">
+                        {% for permission in module_group.permissions %}
+                        <label><input type="checkbox" name="permissions" class="module-permission" value="{{ permission.pk }}"{% if permission.pk|stringformat:'s' in selected_permission_ids %} checked{% endif %}> <span>{{ permission.name }} <small>{{ permission.code }}</small></span></label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="tp-muted">No permissions have been created yet.</p>
+            {% endif %}
+            {% for error in form.permissions.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
+        </div>
+    </section>
+</form>
+<script>
+    const selectAll = document.getElementById('select-all-permissions');
+    selectAll.addEventListener('change', () => {
+        document.querySelectorAll('input[name="permissions"]').forEach((checkbox) => {
+            checkbox.checked = selectAll.checked;
+        });
+    });
+    document.querySelectorAll('.tp-module-group').forEach((moduleGroup) => {
+        const moduleToggle = moduleGroup.querySelector('.select-module-permissions');
+        moduleToggle.addEventListener('change', () => {
+            moduleGroup.querySelectorAll('.module-permission').forEach((checkbox) => {
+                checkbox.checked = moduleToggle.checked;
+            });
+        });
+    });
+</script>
+{% endblock %}

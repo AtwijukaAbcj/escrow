@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | TrustPay Africa{% endblock %}
+
+{% block content %}
+        {% if kyc_required %}
+        <div class="tp-card tp-section" style="margin-bottom:24px; border-left:4px solid var(--brand-warning); background:#fffaf0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                <div>
+                    <strong>Identity verification required</strong>
+                    <p style="margin:6px 0 0; color:#5f6d7a;">Complete KYC before creating or funding escrow transactions.</p>
+                </div>
+                <a class="tp-btn" href="{% url 'kyc-submit' %}">{% if kyc_submission %}Update KYC{% else %}Complete KYC{% endif %}</a>
+            </div>
+        </div>
+        {% endif %}
+        <div class="tp-summary-grid">
+            <div class="tp-stat tp-card">
+                <span class="tp-stat__label">Active escrow</span>
+                <div class="tp-stat__value">$1.42M</div>
+                <div class="tp-stat__meta">+12.4% vs last month</div>
+            </div>
+            <div class="tp-stat tp-card">
+                <span class="tp-stat__label">Transactions</span>
+                <div class="tp-stat__value">248</div>
+                <div class="tp-stat__meta">+8 new today</div>
+            </div>
+            <div class="tp-stat tp-card">
+                <span class="tp-stat__label">Pending KYC</span>
+                <div class="tp-stat__value">34</div>
+                <div class="tp-stat__meta">6 require review</div>
+            </div>
+            <div class="tp-stat tp-card">
+                <span class="tp-stat__label">Released</span>
+                <div class="tp-stat__value">$842K</div>
+                <div class="tp-stat__meta">92% on time</div>
+            </div>
+        </div>
+
+        <div class="tp-card tp-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                <h3 style="margin:0; font-size:1.1rem;">Recent transactions</h3>
+                <a class="tp-btn tp-btn--secondary" href="{% url 'transactions' %}">View all</a>
+            </div>
+            <table class="tp-table">
+                <thead>
+                    <tr>
+                        <th>Transaction</th>
+                        <th>Buyer</th>
+                        <th>Seller</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in transactions|slice:':5' %}
+                    <tr>
+                        <td><a href="{% url 'transaction-detail' item.id %}">{{ item.id }}</a></td>
+                        <td>{{ item.buyer.user.get_full_name|default:item.buyer.user.email }}</td>
+                        <td>{{ item.seller.user.get_full_name|default:item.seller.user.email }}</td>
+                        <td>${{ item.value }}</td>
+                        <td><span class="tp-badge tp-badge--{% if item.status == 'completed' %}success{% elif item.status == 'awaiting_acceptance' %}warning{% else %}neutral{% endif %}">{{ item.status|title }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No transactions yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Settings | TrustPay Africa{% endblock %}
+{% block content %}
+<style>
+    .tp-settings-layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:20px; align-items:start; }
+    .tp-settings-nav { padding:10px; position:sticky; top:92px; }
+    .tp-settings-nav a { display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:10px; color:var(--brand-dark); text-decoration:none; font-weight:700; }
+    .tp-settings-nav a:hover, .tp-settings-nav a.active { color:var(--brand-primary); background:var(--brand-primary-soft); }
+    .tp-settings-nav svg, .tp-settings-heading svg, .tp-settings-actions svg { width:18px; height:18px; flex:0 0 auto; }
+    .tp-settings-content { display:grid; gap:16px; }
+    .tp-settings-heading, .tp-settings-row { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+    .tp-settings-heading h2 { margin:0; font-size:1.1rem; }
+    .tp-settings-heading p { margin:6px 0 0; }
+    .tp-settings-checks { display:grid; gap:12px; }
+    .tp-settings-actions { display:flex; justify-content:flex-end; }
+    @media (max-width:760px) { .tp-settings-layout { grid-template-columns:1fr; } .tp-settings-nav { position:static; display:flex; overflow-x:auto; gap:4px; } .tp-settings-nav a { white-space:nowrap; } }
+</style>
+<div class="tp-page-heading"><div><p class="tp-eyebrow">Workspace configuration</p><h1>Settings</h1><p>Manage your account, notifications, workflow preferences, and payment connections.</p></div></div>
+<form method="post">
+    {% csrf_token %}
+    <div class="tp-settings-layout">
+        <aside class="tp-card tp-settings-nav"><a class="active" href="#profile"><i data-lucide="user-round"></i>Profile</a><a href="#notifications"><i data-lucide="bell"></i>Notifications</a><a href="#workflow"><i data-lucide="sliders-horizontal"></i>Workflow</a><a href="#payments"><i data-lucide="credit-card"></i>Payments</a><a href="#security"><i data-lucide="shield-check"></i>Security</a></aside>
+        <div class="tp-settings-content">
+            <section class="tp-card tp-section" id="profile"><div class="tp-settings-heading"><div><h2>Profile</h2><p class="tp-muted">Your account identity and role.</p></div><i data-lucide="user-round"></i></div><div class="tp-form-grid"><div class="tp-field"><label for="first_name">First name</label><input id="first_name" name="first_name" value="{{ user.first_name }}"></div><div class="tp-field"><label for="last_name">Last name</label><input id="last_name" name="last_name" value="{{ user.last_name }}"></div><div class="tp-field"><label for="email">Email</label><input id="email" type="email" name="email" value="{{ user.email }}"></div><div class="tp-field"><label>Role</label><input value="{{ profile.get_role_display }}" disabled></div></div></section>
+            <section class="tp-card tp-section" id="notifications"><div class="tp-settings-heading"><div><h2>Notifications</h2><p class="tp-muted">Choose which optional operational updates reach your inbox. Security, compliance, and dispute notices remain mandatory.</p></div><i data-lucide="bell"></i></div><div class="tp-settings-checks">{% for field in preferences_form %}{% if 'notification' in field.name|lower %}<label class="tp-check-row">{{ field }}<span>{{ field.label }}</span></label>{% endif %}{% endfor %}</div></section>
+            <section class="tp-card tp-section" id="workflow"><div class="tp-settings-heading"><div><h2>Workflow preferences</h2><p class="tp-muted">Set your preferred workspace density and display currency.</p></div><i data-lucide="sliders-horizontal"></i></div><div class="tp-form-grid">{% for field in preferences_form %}{% if 'notification' not in field.name|lower %}<div class="tp-field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>{% endif %}{% endfor %}</div></section>
+            <section class="tp-card tp-section" id="payments"><div class="tp-settings-heading"><div><h2>Payment integrations</h2><p class="tp-muted">Pesapal is used for online escrow funding.</p></div><i data-lucide="credit-card"></i></div><div class="tp-settings-row"><div><strong>Pesapal</strong><p class="tp-muted">{% if pesapal_configured %}Credentials configured{% else %}Not configured{% endif %}{% if pesapal %} · {{ pesapal.get_environment_display }}{% endif %}</p></div>{% if 'payments.manage' in user_permissions %}<a class="tp-btn tp-btn--secondary" href="{% url 'pesapal-settings' %}">Configure Pesapal</a>{% endif %}</div></section>
+            <section class="tp-card tp-section" id="security"><div class="tp-settings-heading"><div><h2>Security</h2><p class="tp-muted">Password and session management are handled by your account administrator.</p></div><i data-lucide="shield-check"></i></div><div class="tp-settings-row"><span>Signed in as <strong>{{ user.username }}</strong></span><a class="tp-btn tp-btn--secondary" href="{% url 'logout' %}">Sign out</a></div></section>
+            <div class="tp-settings-actions"><button class="tp-btn" type="submit"><i data-lucide="save"></i>Save settings</button></div>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Roles and permissions | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+        <div>
+            <h1 style="margin:0; font-size:1.35rem;">Roles and permissions</h1>
+            <p style="margin:8px 0 0; color:#5f6d7a;">Manage role-based access across the platform modules and workflows.</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="tp-btn" href="{% url 'users:role-create' %}">Create role</a>
+        </div>
+    </div>
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Users</th>
+                <th>Permissions</th>
+                <th>Access</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for role in roles %}
+            <tr>
+                <td><strong>{{ role.name }}</strong></td>
+                <td>{{ role.assigned_users.count }}</td>
+                <td>{{ role.permissions.count }}</td>
+                <td><a class="tp-btn tp-btn--secondary" href="{% url 'users:role-toggle' role.id %}">{% if role.is_active %}Deactivate{% else %}Activate{% endif %}</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No roles have been created yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

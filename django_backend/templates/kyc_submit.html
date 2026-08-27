@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Identity verification | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="margin-bottom:24px;">
+        <h1 style="margin:0; font-size:1.45rem;">Identity verification</h1>
+        <p style="margin:8px 0 0; color:#5f6d7a;">Submit your identification details to verify your TrustPay account.</p>
+    </div>
+    {% if submission.verificationStatus != 'pending' %}
+    <p><span class="tp-badge tp-badge--{% if submission.verificationStatus == 'verified' %}success{% else %}danger{% endif %}">{{ submission.get_verificationStatus_display }}</span></p>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="tp-form-grid">
+            {% for field in form %}
+            <div class="tp-field{% if field.name == 'address' %} tp-field--wide{% endif %}">
+                {{ field.label_tag }}{{ field }}
+                {% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+            <a class="tp-btn tp-btn--secondary" href="{% url 'dashboard' %}">Cancel</a>
+            <button class="tp-btn" type="submit">Submit for verification</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

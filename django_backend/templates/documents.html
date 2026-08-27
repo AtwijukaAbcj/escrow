@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Documents | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom: 18px;">
+        <div>
+            <h2 style="margin:0; font-size:1.25rem;">Documents & evidence</h2>
+            <p style="margin:8px 0 0; color:#5f6d7a;">Track uploaded contracts, proof of payment, and compliance supporting files.</p>
+        </div>
+        <a class="tp-btn" href="{% url 'transactions' %}">Upload from transaction</a>
+    </div>
+
+    <table class="tp-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Transaction</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Uploaded by</th>
+                <th>Version</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in documents %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.transaction.id }}</td>
+                <td>{{ item.type|default:'N/A' }}</td>
+                <td><span class="tp-badge tp-badge--{% if item.status == 'verified' %}success{% elif item.status == 'rejected' %}danger{% else %}warning{% endif %}">{{ item.status|title }}</span></td>
+                <td>{{ item.uploadedBy|default:'System' }}</td>
+                <td>v{{ item.version }}</td>
+                <td>{% if 'transactions.manage' in user_permissions %}<a class="tp-btn tp-btn--secondary" style="padding:8px 12px;" href="{% url 'document-review' item.id %}">Review</a>{% endif %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">No documents have been uploaded yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

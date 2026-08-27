@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Reconciliation | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-page-heading"><div><h1>Reconciliation</h1><p>Compare confirmed payments, ledger credits and transaction totals.</p></div></div>
+<section class="tp-card tp-section"><div class="tp-summary-grid" style="margin-bottom:20px"><div class="tp-stat"><span class="tp-stat__label">Payments checked</span><div class="tp-stat__value">{{ checked_payments }}</div></div><div class="tp-stat"><span class="tp-stat__label">Exceptions</span><div class="tp-stat__value">{{ exceptions|length }}</div></div></div><table class="tp-table"><thead><tr><th>Exception</th><th>Reference</th><th>Details</th></tr></thead><tbody>{% for item in exceptions %}<tr><td><span class="tp-badge tp-badge--danger">{{ item.type }}</span></td><td>{{ item.reference }}</td><td>{{ item.detail }}</td></tr>{% empty %}<tr><td colspan="3"><span class="tp-badge tp-badge--success">Balanced</span> No reconciliation exceptions found.</td></tr>{% endfor %}</tbody></table></section>
+{% endblock %}

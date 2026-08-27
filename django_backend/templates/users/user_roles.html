@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage user roles | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+        <div>
+            <h1 style="margin:0; font-size:1.35rem;">Manage roles</h1>
+            <p style="margin:8px 0 0; color:#5f6d7a;">{{ managed_user.username }}{% if managed_user.email %} · {{ managed_user.email }}{% endif %}</p>
+        </div>
+        <a class="tp-btn tp-btn--secondary" href="{% url 'users:list' %}">Back to users</a>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="roles">
+        {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="tp-permission-tree">
+            <strong>Assigned roles</strong>
+            <div class="tp-permission-list" style="margin-top:16px;">
+                {% for checkbox in form.roles %}<label>{{ checkbox.tag }} {{ checkbox.choice_label }}</label>{% empty %}<span>No active roles available.</span>{% endfor %}
+            </div>
+        </div>
+        {% for error in form.roles.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
+        <div style="display:flex; justify-content:flex-end; margin-top:24px;"><button class="tp-btn" type="submit">Save roles</button></div>
+    </form>
+</div>
+
+<div class="tp-card tp-section" style="margin-top:24px;">
+    <h2 style="margin:0 0 16px; font-size:1.1rem;">Effective permissions</h2>
+    <div class="tp-permission-list">
+        {% for permission in effective_permissions %}<span><strong>{{ permission.code }}</strong><br><small>{{ permission.name }}</small></span>{% empty %}<span>No active permissions.</span>{% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Add milestone | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-card tp-section"><h1 style="margin-top:0;">Add milestone</h1><p class="tp-muted">Transaction {{ transaction.id }}</p><form method="post">{% csrf_token %}<div class="tp-form-grid">{% for field in form %}<div class="tp-field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><button class="tp-btn" style="margin-top:24px;" type="submit">Save milestone</button></form></div>
+{% endblock %}

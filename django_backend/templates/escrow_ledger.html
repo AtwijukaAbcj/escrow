@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Escrow Ledger | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-page-heading"><div><h1>Escrow ledger</h1><p>Immutable funding, release and refund entries for visible transactions.</p></div></div>
+<section class="tp-card tp-section"><div style="overflow-x:auto"><table class="tp-table"><thead><tr><th>Transaction</th><th>Date</th><th>Type</th><th>Reference</th><th>Debit</th><th>Credit</th><th>Running balance</th></tr></thead><tbody>{% for row in entries %}<tr><td>{{ row.entry.transaction.reference|default:row.entry.transaction_id }}</td><td>{{ row.entry.createdAt|date:'d M Y H:i' }}</td><td>{{ row.entry.entryType|title }}</td><td>{{ row.entry.reference }}<div class="tp-muted">{{ row.entry.description }}</div></td><td>{{ row.entry.currency }} {{ row.debit }}</td><td>{{ row.entry.currency }} {{ row.credit }}</td><td>{{ row.entry.currency }} {{ row.balance }}</td></tr>{% empty %}<tr><td colspan="7">No ledger entries found.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

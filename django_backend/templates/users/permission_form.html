@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Create permission | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section tp-auth" style="max-width:720px;">
+    <h1 style="margin:0 0 8px; font-size:1.35rem;">Create permission</h1>
+    <p style="margin:0 0 24px; color:#5f6d7a;">Add a server-side capability that can be assigned to roles.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}
+        <div class="tp-field" style="margin-bottom:18px;">
+            {{ field.label_tag }}{{ field }}
+            {% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+            <a class="tp-btn tp-btn--secondary" href="{% url 'users:roles' %}">Cancel</a>
+            <button class="tp-btn" type="submit">Create permission</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

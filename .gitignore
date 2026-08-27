@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+.env
+.DS_Store
+coverage
+npm-debug.log*
+package-lock.json
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.py[cod]
+**/db.sqlite3
+**/media/
+**/uploads/
+**/bin/
+**/obj/

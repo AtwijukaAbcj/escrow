@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign in | TrustPay Africa{% endblock %}
+
+{% block content %}
+<div class="tp-card tp-section tp-auth">
+    <div style="margin-bottom:24px;">
+        <h1 style="margin:0; font-size:1.6rem;">Sign in</h1>
+        <p style="margin:8px 0 0; color:#5f6d7a;">Access your TrustPay Africa workspace.</p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="tp-form-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="tp-field" style="margin-bottom:18px;">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            {% for error in form.username.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="tp-field" style="margin-bottom:24px;">
+            {{ form.password.label_tag }}
+            {{ form.password }}
+            {% for error in form.password.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
+        </div>
+        <button class="tp-btn" type="submit" style="width:100%;">Sign in</button>
+    </form>
+    <p style="margin:18px 0 0; text-align:center; color:#5f6d7a;">New to TrustPay Africa? <a href="{% url 'users:register' %}">Create an account</a></p>
+</div>
+{% endblock %}

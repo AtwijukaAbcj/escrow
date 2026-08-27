@@ -1,0 +1,194 @@
+[
+  {
+    "id": "admin-seed-user",
+    "tenantId": "default-tenant",
+    "email": "admin@trustpay.africa",
+    "phoneNumber": "+256700000001",
+    "name": "Platform Administrator",
+    "passwordHash": "$2b$12$wuFLK6TVZA/F701cFKDhGuWbRETht9H53h/W5NvWbZn1lYbhrelHG",
+    "roles": [
+      "system_admin"
+    ],
+    "isEmailVerified": true,
+    "isPhoneVerified": true,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-05T00:00:00.000Z",
+    "updatedAt": "2026-08-05T00:00:00.000Z"
+  },
+  {
+    "id": "cb0d13b2-cb73-4ee0-97a3-643766fcf17b",
+    "tenantId": "default-tenant",
+    "email": "johntest@gmail.com",
+    "phoneNumber": "0752431368",
+    "name": "John",
+    "passwordHash": "$2b$12$FdUlfj/nLxyarl60Ol/54O/51c0QTCvUZ3TEnj22ZJBQ6cWDHR/WO",
+    "roles": [
+      "ROLE_USER"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T15:03:03.205Z",
+    "updatedAt": "2026-08-06T15:03:03.205Z"
+  },
+  {
+    "id": "60da0422-b50a-430c-9864-867263806c5e",
+    "tenantId": "default-tenant",
+    "email": "bseller@gmail.com",
+    "phoneNumber": "752431368",
+    "name": "Atwijuka Brendan",
+    "passwordHash": "$2b$12$JkmB4DGIveEc9NB78VrSCeW3KhUW4dzzegxqqJX528Y89Ia75UX9i",
+    "roles": [
+      "ROLE_USER"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T15:32:49.455Z",
+    "updatedAt": "2026-08-06T15:32:49.455Z"
+  },
+  {
+    "id": "f2e1dfa3-755d-4a4b-a4ac-12d19e8570b3",
+    "tenantId": "default-tenant",
+    "email": "buyerone@gmail.com",
+    "phoneNumber": "5084259755",
+    "name": "BuyerOne",
+    "passwordHash": "$2b$12$UBPARMgF2VQ04r9SFeeYUuZkTdvimnvU8NXLmF/lfPnkJnW39UFHm",
+    "roles": [
+      "ROLE_USER"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T15:42:43.096Z",
+    "updatedAt": "2026-08-06T15:42:43.096Z"
+  },
+  {
+    "id": "d1918ba6-35c9-4ab1-b370-700ccc15b56b",
+    "tenantId": "default",
+    "email": "test@example.com",
+    "phoneNumber": "123",
+    "name": "test",
+    "passwordHash": "$2b$12$bmcoxkU88VNn2kfc93TjEeNYaD5WjHiW0ZPoJBBg5C4qmnAUFT1Qy",
+    "roles": [
+      "ROLE_USER"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T16:11:31.692Z",
+    "updatedAt": "2026-08-06T16:11:31.692Z"
+  },
+  {
+    "id": "2f5cafd3-2922-4828-a517-5635e7026d67",
+    "tenantId": "default-tenant",
+    "email": "buyer2#gmail.com",
+    "phoneNumber": "0394512925",
+    "name": "buyer Two",
+    "passwordHash": "$2b$12$tJvw07UQ91r0xVUbL9TQyOjXxT0mK2Sf1qEl8UfTCL6PXI5Xpeic.",
+    "roles": [
+      "ROLE_USER"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T16:11:54.949Z",
+    "updatedAt": "2026-08-06T16:11:54.949Z"
+  },
+  {
+    "id": "e2820d62-6dda-4036-8b3b-d6ff8702d6b9",
+    "tenantId": "default-tenant",
+    "email": "buyer2@gmail.com",
+    "phoneNumber": "0755668868",
+    "name": "Atwijuka Brendan Charles",
+    "passwordHash": "$2b$12$ovasy6jSUZ83kw/.vbyVSuUdIx3EKZyb/qGCl5E2y4OSZX0j9uJkm",
+    "roles": [
+      "ROLE_USER"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T16:56:23.335Z",
+    "updatedAt": "2026-08-06T16:56:23.335Z"
+  },
+  {
+    "id": "7afbb9d0-da53-42ad-b6d7-930227ec26dc",
+    "tenantId": "default-tenant",
+    "email": "buyer3@gmail.com",
+    "phoneNumber": "0702102105",
+    "name": "Atwijuka Brendan Charles",
+    "passwordHash": "$2b$12$QdOI6kman4YZRd2A.U3a3uJ8JN1bwh28Z.ydt9mmPgWthMdEf7pPC",
+    "roles": [
+      "buyer"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-06T16:58:59.525Z",
+    "updatedAt": "2026-08-06T16:58:59.525Z"
+  },
+  {
+    "id": "cce30b23-94a3-46b5-bbdb-659dd75692d0",
+    "tenantId": "default-tenant",
+    "email": "seed.buyer.login.1786557688245@example.com",
+    "phoneNumber": "+256700000100",
+    "name": "Seed Buyer Login",
+    "passwordHash": "$2b$12$tIm2vRm.no.8IniSubm0UudApuLnjaUos8YLi9c13sz9WvI44Red2",
+    "roles": [
+      "buyer"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-12T18:01:29.325Z",
+    "updatedAt": "2026-08-12T18:01:29.325Z"
+  },
+  {
+    "id": "d6edf7b7-1bad-4a81-a34f-b73c4fc8a6c0",
+    "tenantId": "default-tenant",
+    "email": "seed.seller.login.1786557688245@example.com",
+    "phoneNumber": "+256700000101",
+    "name": "Seed Seller Login",
+    "passwordHash": "$2b$12$J62egiNoJ/tYiwzZNuV0beok8.qFXELTD3pBFSSDbPHkwQlq3tHIm",
+    "roles": [
+      "seller"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-12T18:01:30.188Z",
+    "updatedAt": "2026-08-12T18:01:30.188Z"
+  },
+  {
+    "id": "74d184d4-bd6c-4e4b-8704-8502621b2e35",
+    "tenantId": "default-tenant",
+    "email": "seed.buyer.login.1786561580642@example.com",
+    "phoneNumber": "+256700000100",
+    "name": "Seed Buyer Login",
+    "passwordHash": "$2b$12$0OwCAIdIb8SOLaLDW531yuLWOhfgSaGicC7xRLKhYL/qD/UcLaVJy",
+    "roles": [
+      "buyer"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-12T19:06:21.443Z",
+    "updatedAt": "2026-08-12T19:06:21.444Z"
+  },
+  {
+    "id": "d1068c5d-8e08-44d2-86db-aa595a58fff7",
+    "tenantId": "default-tenant",
+    "email": "seed.seller.login.1786561580642@example.com",
+    "phoneNumber": "+256700000101",
+    "name": "Seed Seller Login",
+    "passwordHash": "$2b$12$55lWHokICwGZELIm9mnr1OIxLrDhZBBmTepif4E6ke0/I9zvw3Mp6",
+    "roles": [
+      "seller"
+    ],
+    "isEmailVerified": false,
+    "isPhoneVerified": false,
+    "mfaEnabled": false,
+    "createdAt": "2026-08-12T19:06:22.250Z",
+    "updatedAt": "2026-08-12T19:06:22.250Z"
+  }
+]

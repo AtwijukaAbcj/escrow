@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Notification operations | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-page-heading"><div><p class="tp-eyebrow">Operations</p><h1>Notification deliveries</h1><p>Monitor external delivery attempts without affecting the underlying business workflow.</p></div></div>
+<section class="tp-card tp-section"><div style="overflow-x:auto"><table class="tp-table"><thead><tr><th>Recipient</th><th>Notification</th><th>Channel</th><th>Status</th><th>Attempts</th><th>Last attempt</th><th></th></tr></thead><tbody>{% for delivery in deliveries %}<tr><td>{{ delivery.notification.user.email|default:delivery.notification.user.username }}</td><td>{{ delivery.notification.title }}</td><td>{{ delivery.channel|title }}</td><td>{{ delivery.get_status_display }}</td><td>{{ delivery.retry_count }}</td><td>{{ delivery.attempted_at|date:'d M Y H:i'|default:'Not attempted' }}</td><td>{% if delivery.status == 'failed' %}<form method="post" action="{% url 'users:notification-retry' delivery.pk %}">{% csrf_token %}<button class="tp-btn tp-btn--secondary" type="submit">Retry</button></form>{% else %}-{% endif %}</td></tr>{% empty %}<tr><td colspan="7">No delivery records found.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

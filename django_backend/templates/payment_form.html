@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Fund escrow | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-card tp-section">
+    <h1 style="margin-top:0;">Fund escrow</h1>
+    <p class="tp-muted">Transaction {{ transaction.id }}. Payment will remain pending until TrustPay confirms it.</p>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="tp-form-grid">{% for field in form %}<div class="tp-field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px;"><button class="tp-btn" type="submit">Submit payment</button><button class="tp-btn tp-btn--secondary" type="submit" formaction="{% url 'pesapal-payment' transaction.id %}">Pay with Pesapal</button></div>
+    </form>
+</div>
+{% endblock %}
