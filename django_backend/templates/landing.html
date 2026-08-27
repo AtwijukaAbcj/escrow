@@ -1,95 +1,2994 @@
+
 {% extends 'base.html' %}
-{% block title %}TrustPay Africa | Payments held with confidence{% endblock %}
+{% block title %}TrustPay Africa | Secure Escrow & Trusted Transactions{% endblock %}
+
 {% block content %}
+
 <style>
-    .landing { margin: -30px calc((1320px - min(100vw - 32px, 1320px)) / -2) -60px; overflow:hidden; background:#fff; }
-    .landing__nav { max-width:1180px; margin:0 auto; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
-    .landing__brand { display:flex; align-items:center; gap:10px; color:#111827; font-weight:900; font-size:1.05rem; text-decoration:none; }
-    .landing__brand-mark { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:#111827; color:#fff; }
-    .landing__nav-links { display:flex; align-items:center; gap:26px; color:#526174; font-size:.88rem; font-weight:700; }
-    .landing__nav-links a { color:inherit; text-decoration:none; }
-    .landing__nav-links a:hover { color:var(--brand-primary); }
-    .landing__nav-actions { display:flex; align-items:center; gap:10px; }
-    .landing__hero { max-width:1180px; margin:0 auto; padding:72px 28px 88px; display:grid; grid-template-columns:minmax(0,1.02fr) minmax(360px,.98fr); gap:70px; align-items:center; }
-    .landing__eyebrow { display:flex; align-items:center; gap:10px; color:var(--brand-primary); font-size:.73rem; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
-    .landing__eyebrow::before { content:''; width:34px; height:2px; background:var(--brand-primary); }
-    .landing h1 { max-width:650px; margin:18px 0 22px; color:#0b1738; font-size:clamp(3rem,6vw,5.8rem); line-height:.94; letter-spacing:-.055em; }
-    .landing__lead { max-width:570px; margin:0; color:#526174; font-size:1.12rem; line-height:1.7; }
-    .landing__actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
-    .landing__actions .tp-btn { min-height:48px; padding:0 20px; display:inline-flex; align-items:center; gap:8px; }
-    .landing__trust { display:flex; flex-wrap:wrap; gap:18px; margin-top:30px; color:#718096; font-size:.8rem; font-weight:700; }
-    .landing__trust span { display:inline-flex; align-items:center; gap:7px; }
-    .landing__trust svg { width:16px; color:var(--brand-success); }
-    .landing__visual { position:relative; min-height:470px; display:grid; place-items:center; }
-    .landing__visual::before { content:''; position:absolute; width:440px; height:440px; border-radius:50%; background:#f4eee8; right:8%; top:4%; }
-    .landing__visual::after { content:''; position:absolute; width:180px; height:180px; border-radius:50%; border:1px solid #efc9bd; right:0; bottom:2%; }
-    .landing__phone { position:relative; z-index:2; width:260px; padding:12px; border-radius:30px; background:#101827; box-shadow:0 28px 55px rgba(15,23,42,.24); transform:rotate(5deg); }
-    .landing__phone-screen { min-height:440px; padding:22px 17px; border-radius:21px; background:linear-gradient(160deg,#f8fbff,#e8f1f5); }
-    .landing__phone-top { display:flex; justify-content:space-between; color:#516273; font-size:.66rem; font-weight:800; }
-    .landing__phone-balance { margin-top:52px; padding:18px; border-radius:18px; background:#11243b; color:#fff; }
-    .landing__phone-balance small { color:#a6b8ca; font-size:.66rem; }
-    .landing__phone-balance strong { display:block; margin-top:7px; font-size:1.55rem; }
-    .landing__phone-card { margin-top:14px; padding:14px; border-radius:14px; background:#fff; box-shadow:0 8px 20px rgba(34,52,73,.08); }
-    .landing__phone-card-row { display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.72rem; font-weight:800; }
-    .landing__phone-card-row + .landing__phone-card-row { margin-top:14px; color:#64748b; font-size:.67rem; }
-    .landing__phone-status { color:#138a4b; }
-    .landing__float { position:absolute; z-index:3; display:flex; align-items:center; gap:10px; width:190px; padding:14px; border:1px solid rgba(255,255,255,.8); border-radius:15px; background:rgba(255,255,255,.9); box-shadow:0 15px 35px rgba(15,23,42,.13); color:#233247; font-size:.74rem; font-weight:800; backdrop-filter:blur(8px); }
-    .landing__float svg { width:20px; color:var(--brand-primary); }
-    .landing__float--top { top:70px; left:4%; }
-    .landing__float--bottom { right:0; bottom:56px; }
-    .landing__section { padding:84px 28px; }
-    .landing__section--soft { background:#f7f8fa; }
-    .landing__inner { max-width:1180px; margin:0 auto; }
-    .landing__section-heading { max-width:610px; margin-bottom:34px; }
-    .landing__section-heading h2 { margin:12px 0 12px; color:#0b1738; font-size:clamp(2rem,4vw,3.4rem); line-height:1; letter-spacing:-.04em; }
-    .landing__section-heading p { color:#64748b; line-height:1.65; }
-    .landing__feature-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
-    .landing__feature { min-height:190px; padding:24px; border:1px solid #e5e8ed; border-radius:14px; background:#fff; }
-    .landing__feature-icon { width:40px; height:40px; display:grid; place-items:center; border-radius:12px; background:#fff0ec; color:var(--brand-primary); }
-    .landing__feature-icon svg { width:20px; }
-    .landing__feature h3 { margin:22px 0 8px; color:#1e293b; font-size:1rem; }
-    .landing__feature p { margin:0; color:#64748b; font-size:.88rem; line-height:1.55; }
-    .landing__steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:34px; }
-    .landing__step { position:relative; padding-top:44px; }
-    .landing__step-number { position:absolute; top:0; left:0; color:var(--brand-primary); font-size:.8rem; font-weight:900; letter-spacing:.12em; }
-    .landing__step h3 { margin:0 0 8px; color:#0b1738; font-size:1.1rem; }
-    .landing__step p { margin:0; color:#64748b; line-height:1.6; font-size:.9rem; }
-    .landing__cta { display:flex; align-items:center; justify-content:space-between; gap:30px; padding:42px 46px; border-radius:18px; background:#10233a; color:#fff; }
-    .landing__cta h2 { margin:0 0 8px; font-size:2rem; letter-spacing:-.03em; }
-    .landing__cta p { margin:0; color:#afc0d1; }
-    .landing__cta .tp-btn { background:#fff; color:#10233a; border-color:#fff; }
-    .landing__footer { max-width:1180px; margin:0 auto; padding:28px; display:flex; justify-content:space-between; gap:20px; color:#718096; font-size:.78rem; }
-    @media (max-width:900px) { .landing__hero { grid-template-columns:1fr; gap:20px; padding-top:48px; } .landing__visual { min-height:430px; } .landing__feature-grid,.landing__steps { grid-template-columns:1fr; } .landing__feature { min-height:auto; } }
-    @media (max-width:620px) { .landing { margin-top:-30px; } .landing__nav { padding:18px 20px; } .landing__nav-links { display:none; } .landing__hero,.landing__section { padding-left:20px; padding-right:20px; } .landing h1 { font-size:3.35rem; } .landing__visual { transform:scale(.82); margin:-28px -35px; } .landing__cta { align-items:flex-start; flex-direction:column; padding:30px; } .landing__footer { padding:24px 20px; flex-direction:column; } }
+    /* =========================================================
+       TRUSTPAY AFRICA — PUBLIC LANDING PAGE
+       Full-width layout
+       ========================================================= */
+
+.landing {
+    --tp-navy: #0b1738;
+    --tp-navy-2: #10233a;
+    --tp-navy-3: #17324d;
+    --tp-text: #536174;
+    --tp-muted: #7a8797;
+    --tp-border: #e5e9ee;
+    --tp-soft: #f7f8fa;
+    --tp-warm: #faf7f4;
+    --tp-success: #138a4b;
+    --tp-white: #ffffff;
+
+    /* Break out of base.html's container */
+    width: 100vw;
+    max-width: none;
+
+    position: relative;
+    left: 50%;
+    right: 50%;
+
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: -30px;
+    margin-bottom: -60px;
+
+    overflow: hidden;
+
+    background: #fff;
+    color: var(--tp-navy);
+}
+
+    .landing *,
+    .landing *::before,
+    .landing *::after {
+        box-sizing: border-box;
+    }
+
+    .landing a {
+        transition:
+            color .2s ease,
+            background-color .2s ease,
+            border-color .2s ease,
+            box-shadow .2s ease,
+            transform .2s ease;
+    }
+
+
+    /* =========================================================
+       NAVIGATION
+       ========================================================= */
+
+    .landing__nav {
+        width: 100%;
+        padding: 22px clamp(22px, 5vw, 88px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 30px;
+        background: rgba(255, 255, 255, .92);
+        border-bottom: 1px solid rgba(229, 233, 238, .75);
+        backdrop-filter: blur(15px);
+        position: relative;
+        z-index: 20;
+    }
+
+    .landing__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        color: #111827;
+        font-weight: 900;
+        font-size: 1.07rem;
+        letter-spacing: -.02em;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .landing__brand-mark {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background:
+            linear-gradient(145deg, #193550, #0d1928);
+        color: #fff;
+        font-size: .95rem;
+        font-weight: 900;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .13);
+    }
+
+    .landing__nav-links {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        color: var(--tp-text);
+        font-size: .86rem;
+        font-weight: 750;
+    }
+
+    .landing__nav-links a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .landing__nav-links a:hover {
+        color: var(--brand-primary);
+    }
+
+    .landing__nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .landing__nav-actions .tp-btn {
+        min-height: 42px;
+        padding-inline: 18px;
+        border-radius: 10px;
+    }
+
+
+    /* =========================================================
+       HERO
+       ========================================================= */
+
+    .landing__hero {
+        width: 100%;
+        min-height: 720px;
+        padding:
+            clamp(70px, 8vw, 120px)
+            clamp(22px, 6vw, 105px)
+            clamp(80px, 9vw, 130px);
+
+        display: grid;
+        grid-template-columns:
+            minmax(0, 1.05fr)
+            minmax(410px, .95fr);
+
+        gap: clamp(50px, 7vw, 110px);
+        align-items: center;
+
+        position: relative;
+
+        background:
+            radial-gradient(
+                circle at 86% 18%,
+                rgba(244, 232, 224, .8),
+                transparent 28%
+            ),
+            radial-gradient(
+                circle at 9% 88%,
+                rgba(239, 247, 250, .7),
+                transparent 24%
+            ),
+            #fff;
+    }
+
+    .landing__hero-copy {
+        position: relative;
+        z-index: 3;
+        max-width: 760px;
+    }
+
+    .landing__eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        color: var(--brand-primary);
+        font-size: .72rem;
+        font-weight: 900;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+
+    .landing__eyebrow::before {
+        content: '';
+        width: 35px;
+        height: 2px;
+        background: var(--brand-primary);
+        border-radius: 20px;
+    }
+
+    .landing h1 {
+        margin: 20px 0 24px;
+        max-width: 760px;
+
+        color: var(--tp-navy);
+
+        font-size: clamp(
+            3.4rem,
+            6vw,
+            6.4rem
+        );
+
+        line-height: .94;
+        letter-spacing: -.058em;
+    }
+
+    .landing__headline-accent {
+        display: block;
+        color: var(--brand-primary);
+    }
+
+    .landing__lead {
+        max-width: 650px;
+        margin: 0;
+        color: var(--tp-text);
+        font-size: clamp(1rem, 1.2vw, 1.16rem);
+        line-height: 1.75;
+    }
+
+    .landing__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 34px;
+    }
+
+    .landing__actions .tp-btn {
+        min-height: 52px;
+        padding: 0 23px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 9px;
+
+        border-radius: 11px;
+        font-weight: 850;
+    }
+
+    .landing__actions .tp-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, .12);
+    }
+
+    .landing__actions .tp-btn i,
+    .landing__actions .tp-btn svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .landing__trust {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 13px 22px;
+        margin-top: 30px;
+
+        color: var(--tp-muted);
+
+        font-size: .8rem;
+        font-weight: 750;
+    }
+
+    .landing__trust span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .landing__trust svg {
+        width: 16px;
+        height: 16px;
+        color: var(--tp-success);
+    }
+
+
+    /* =========================================================
+       HERO VISUAL
+       ========================================================= */
+
+    .landing__visual {
+        position: relative;
+        min-height: 520px;
+
+        display: grid;
+        place-items: center;
+    }
+
+    .landing__visual::before {
+        content: '';
+
+        position: absolute;
+
+        width: min(480px, 38vw);
+        aspect-ratio: 1;
+
+        right: 7%;
+        top: 1%;
+
+        border-radius: 50%;
+
+        background:
+            radial-gradient(
+                circle at 35% 30%,
+                #fff 0,
+                #f6f0eb 45%,
+                #efe3da 100%
+            );
+
+        box-shadow:
+            inset 0 0 0 1px rgba(232, 199, 186, .38);
+    }
+
+    .landing__visual::after {
+        content: '';
+
+        position: absolute;
+
+        width: 190px;
+        height: 190px;
+
+        right: 0;
+        bottom: 1%;
+
+        border-radius: 50%;
+        border: 1px solid #e9c8bc;
+    }
+
+    .landing__orbit {
+        position: absolute;
+
+        width: 88%;
+        height: 78%;
+
+        border-radius: 50%;
+
+        border:
+            1px dashed
+            rgba(124, 93, 79, .15);
+
+        transform: rotate(-12deg);
+    }
+
+    .landing__phone {
+        position: relative;
+        z-index: 3;
+
+        width: 275px;
+        padding: 11px;
+
+        border-radius: 33px;
+
+        background:
+            linear-gradient(
+                160deg,
+                #192539,
+                #080e17
+            );
+
+        box-shadow:
+            0 42px 75px rgba(15, 23, 42, .25),
+            0 10px 26px rgba(15, 23, 42, .12);
+
+        transform: rotate(4deg);
+    }
+
+    .landing__phone::before {
+        content: '';
+
+        position: absolute;
+
+        top: 8px;
+        left: 50%;
+
+        width: 74px;
+        height: 15px;
+
+        transform: translateX(-50%);
+
+        border-radius: 20px;
+        background: #080d14;
+
+        z-index: 4;
+    }
+
+    .landing__phone-screen {
+        min-height: 458px;
+        padding: 23px 17px 19px;
+
+        overflow: hidden;
+
+        border-radius: 23px;
+
+        background:
+            linear-gradient(
+                160deg,
+                #fbfdff,
+                #eaf1f5
+            );
+    }
+
+    .landing__phone-top {
+        display: flex;
+        justify-content: space-between;
+
+        color: #516273;
+
+        font-size: .64rem;
+        font-weight: 850;
+    }
+
+    .landing__phone-balance {
+        margin-top: 54px;
+        padding: 19px;
+
+        border-radius: 19px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #17334f,
+                #102236
+            );
+
+        color: #fff;
+
+        box-shadow:
+            0 15px 30px
+            rgba(17, 36, 59, .17);
+    }
+
+    .landing__phone-balance small {
+        color: #a9bbcc;
+        font-size: .65rem;
+        font-weight: 700;
+    }
+
+    .landing__phone-balance strong {
+        display: block;
+
+        margin-top: 7px;
+
+        font-size: 1.62rem;
+        letter-spacing: -.035em;
+    }
+
+    .landing__phone-balance-meta {
+        margin-top: 11px;
+
+        display: flex;
+        justify-content: space-between;
+
+        color: #c8d3dd;
+
+        font-size: .61rem;
+        font-weight: 700;
+    }
+
+    .landing__phone-card {
+        margin-top: 14px;
+        padding: 14px;
+
+        border: 1px solid #edf0f3;
+        border-radius: 15px;
+
+        background:
+            rgba(255, 255, 255, .97);
+
+        box-shadow:
+            0 9px 22px
+            rgba(34, 52, 73, .07);
+    }
+
+    .landing__phone-card-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+
+        color: #26364a;
+
+        font-size: .71rem;
+        font-weight: 850;
+    }
+
+    .landing__phone-card-row + .landing__phone-card-row {
+        margin-top: 13px;
+
+        color: #64748b;
+
+        font-size: .65rem;
+        font-weight: 700;
+    }
+
+    .landing__phone-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+
+        color: var(--tp-success);
+    }
+
+    .landing__phone-status::before {
+        content: '';
+
+        width: 6px;
+        height: 6px;
+
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .landing__progress {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px;
+
+        margin-top: 15px;
+    }
+
+    .landing__progress span {
+        height: 4px;
+
+        border-radius: 10px;
+        background: #dce5eb;
+    }
+
+    .landing__progress .is-active {
+        background: var(--brand-primary);
+    }
+
+
+    /* Floating transaction cards */
+
+    .landing__float {
+        position: absolute;
+        z-index: 5;
+
+        width: 205px;
+
+        padding: 14px 15px;
+
+        display: flex;
+        align-items: center;
+        gap: 11px;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, .9);
+
+        border-radius: 16px;
+
+        background:
+            rgba(255, 255, 255, .93);
+
+        box-shadow:
+            0 18px 40px
+            rgba(15, 23, 42, .12);
+
+        backdrop-filter: blur(10px);
+
+        color: #233247;
+
+        font-size: .72rem;
+        font-weight: 850;
+    }
+
+    .landing__float-icon {
+        width: 36px;
+        height: 36px;
+
+        flex: 0 0 36px;
+
+        display: grid;
+        place-items: center;
+
+        border-radius: 11px;
+
+        background: #fff0ec;
+
+        color: var(--brand-primary);
+    }
+
+    .landing__float svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .landing__float small {
+        display: block;
+
+        margin-top: 2px;
+
+        color: #7b8795;
+
+        font-size: .61rem;
+        font-weight: 700;
+    }
+
+    .landing__float--top {
+        top: 70px;
+        left: 0;
+    }
+
+    .landing__float--bottom {
+        right: 0;
+        bottom: 54px;
+    }
+
+
+    /* =========================================================
+       TRUST STRIP
+       ========================================================= */
+
+    .landing__trust-strip {
+        width: 100%;
+
+        border-top: 1px solid #edf0f3;
+        border-bottom: 1px solid #edf0f3;
+
+        background: #fff;
+    }
+
+    .landing__trust-strip-inner {
+        width: 100%;
+
+        padding:
+            27px
+            clamp(22px, 6vw, 105px);
+
+        display: grid;
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 25px;
+    }
+
+    .landing__trust-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .landing__trust-item-icon {
+        width: 40px;
+        height: 40px;
+
+        flex: 0 0 40px;
+
+        display: grid;
+        place-items: center;
+
+        border-radius: 12px;
+
+        background: #f7f9fb;
+        border: 1px solid #e9edf1;
+
+        color: var(--brand-primary);
+    }
+
+    .landing__trust-item-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .landing__trust-item strong {
+        display: block;
+
+        color: #26364a;
+
+        font-size: .83rem;
+    }
+
+    .landing__trust-item span:last-child {
+        display: block;
+
+        margin-top: 2px;
+
+        color: #7b8795;
+
+        font-size: .7rem;
+        line-height: 1.35;
+    }
+
+
+    /* =========================================================
+       SECTIONS
+       ========================================================= */
+
+    .landing__section {
+        width: 100%;
+
+        padding:
+            clamp(75px, 8vw, 115px)
+            clamp(22px, 6vw, 105px);
+    }
+
+    .landing__section--soft {
+        background: var(--tp-soft);
+    }
+
+    .landing__section--warm {
+        background:
+            radial-gradient(
+                circle at 7% 18%,
+                rgba(242, 229, 220, .65),
+                transparent 25%
+            ),
+            var(--tp-warm);
+    }
+
+    .landing__inner {
+        width: 100%;
+    }
+
+    .landing__section-heading {
+        max-width: 700px;
+        margin-bottom: 42px;
+    }
+
+    .landing__section-heading--center {
+        margin-left: auto;
+        margin-right: auto;
+
+        text-align: center;
+    }
+
+    .landing__section-heading--center
+    .landing__eyebrow {
+        justify-content: center;
+    }
+
+    .landing__section-heading h2 {
+        margin: 13px 0 14px;
+
+        color: var(--tp-navy);
+
+        font-size:
+            clamp(2.25rem, 4.3vw, 4rem);
+
+        line-height: .98;
+
+        letter-spacing: -.047em;
+    }
+
+    .landing__section-heading p {
+        margin: 0;
+
+        color: #64748b;
+
+        font-size: .98rem;
+        line-height: 1.7;
+    }
+
+
+    /* =========================================================
+       FEATURE CARDS
+       ========================================================= */
+
+    .landing__feature-grid {
+        width: 100%;
+
+        display: grid;
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 18px;
+    }
+
+    .landing__feature {
+        min-height: 235px;
+
+        padding: 29px;
+
+        border:
+            1px solid
+            var(--tp-border);
+
+        border-radius: 18px;
+
+        background: #fff;
+
+        transition:
+            transform .22s ease,
+            box-shadow .22s ease,
+            border-color .22s ease;
+    }
+
+    .landing__feature:hover {
+        transform: translateY(-5px);
+
+        border-color: #d8dfe6;
+
+        box-shadow:
+            0 22px 48px
+            rgba(15, 23, 42, .075);
+    }
+
+    .landing__feature-icon {
+        width: 46px;
+        height: 46px;
+
+        display: grid;
+        place-items: center;
+
+        border-radius: 14px;
+
+        background: #fff0ec;
+
+        color: var(--brand-primary);
+    }
+
+    .landing__feature-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .landing__feature h3 {
+        margin: 23px 0 9px;
+
+        color: #1e293b;
+
+        font-size: 1.04rem;
+    }
+
+    .landing__feature p {
+        margin: 0;
+
+        color: #64748b;
+
+        font-size: .87rem;
+        line-height: 1.65;
+    }
+
+
+    /* =========================================================
+       HOW IT WORKS
+       ========================================================= */
+
+    .landing__steps {
+        position: relative;
+
+        width: 100%;
+
+        display: grid;
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: clamp(35px, 5vw, 75px);
+    }
+
+    .landing__steps::before {
+        content: '';
+
+        position: absolute;
+
+        top: 18px;
+        left: 5%;
+        right: 5%;
+
+        height: 1px;
+
+        background: #dce3e9;
+    }
+
+    .landing__step {
+        position: relative;
+
+        padding-top: 56px;
+    }
+
+    .landing__step-number {
+        position: absolute;
+
+        top: 0;
+        left: 0;
+
+        z-index: 2;
+
+        min-width: 38px;
+        height: 38px;
+
+        padding: 0 11px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        border:
+            1px solid
+            #dde4ea;
+
+        border-radius: 20px;
+
+        background: #fff;
+
+        color: var(--brand-primary);
+
+        font-size: .68rem;
+        font-weight: 900;
+
+        letter-spacing: .08em;
+
+        box-shadow:
+            0 7px 18px
+            rgba(15, 23, 42, .05);
+    }
+
+    .landing__step h3 {
+        margin: 0 0 9px;
+
+        color: var(--tp-navy);
+
+        font-size: 1.12rem;
+    }
+
+    .landing__step p {
+        max-width: 440px;
+
+        margin: 0;
+
+        color: #64748b;
+
+        font-size: .89rem;
+        line-height: 1.68;
+    }
+
+
+    /* =========================================================
+       USE CASES
+       ========================================================= */
+
+    .landing__use-cases {
+        width: 100%;
+
+        display: grid;
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 15px;
+    }
+
+    .landing__use-case {
+        min-height: 180px;
+
+        padding: 24px;
+
+        border:
+            1px solid
+            rgba(222, 214, 208, .85);
+
+        border-radius: 17px;
+
+        background:
+            rgba(255, 255, 255, .72);
+
+        backdrop-filter: blur(4px);
+
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            background .2s ease;
+    }
+
+    .landing__use-case:hover {
+        transform: translateY(-4px);
+
+        background: #fff;
+
+        box-shadow:
+            0 18px 35px
+            rgba(15, 23, 42, .06);
+    }
+
+    .landing__use-case span {
+        color: var(--brand-primary);
+
+        font-size: .69rem;
+        font-weight: 900;
+
+        letter-spacing: .11em;
+        text-transform: uppercase;
+    }
+
+    .landing__use-case h3 {
+        margin: 13px 0 8px;
+
+        color: #1e293b;
+
+        font-size: 1rem;
+    }
+
+    .landing__use-case p {
+        margin: 0;
+
+        color: #6b7787;
+
+        font-size: .82rem;
+        line-height: 1.58;
+    }
+
+
+    /* =========================================================
+       SECURITY
+       ========================================================= */
+
+    .landing__security {
+        width: 100%;
+
+        display: grid;
+        grid-template-columns:
+            minmax(0, .9fr)
+            minmax(0, 1.1fr);
+
+        gap: clamp(45px, 7vw, 110px);
+
+        align-items: center;
+    }
+
+    .landing__security-card {
+        padding:
+            clamp(28px, 4vw, 46px);
+
+        border-radius: 24px;
+
+        color: #fff;
+
+        background:
+            radial-gradient(
+                circle at 100% 0,
+                rgba(255, 255, 255, .08),
+                transparent 35%
+            ),
+            linear-gradient(
+                145deg,
+                #17314c,
+                #0d1d2f
+            );
+
+        box-shadow:
+            0 28px 60px
+            rgba(15, 23, 42, .17);
+    }
+
+    .landing__security-card > small {
+        color: #9eb1c5;
+
+        font-size: .67rem;
+        font-weight: 850;
+
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .landing__security-card h3 {
+        margin: 10px 0 25px;
+
+        font-size:
+            clamp(1.6rem, 2.5vw, 2.15rem);
+
+        letter-spacing: -.03em;
+    }
+
+    .landing__security-list {
+        display: grid;
+    }
+
+    .landing__security-list-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+
+        padding: 16px 0;
+
+        border-top:
+            1px solid
+            rgba(255, 255, 255, .08);
+    }
+
+    .landing__security-list-item:first-child {
+        border-top: 0;
+    }
+
+    .landing__security-list-item svg {
+        width: 18px;
+        height: 18px;
+
+        flex: 0 0 18px;
+
+        margin-top: 2px;
+
+        color: #5ee19e;
+    }
+
+    .landing__security-list-item strong {
+        display: block;
+
+        font-size: .9rem;
+    }
+
+    .landing__security-list-item span {
+        display: block;
+
+        margin-top: 4px;
+
+        color: #9fb2c6;
+
+        font-size: .77rem;
+        line-height: 1.48;
+    }
+
+    .landing__security-copy {
+        max-width: 720px;
+    }
+
+    .landing__security-copy h2 {
+        margin: 13px 0 17px;
+
+        color: var(--tp-navy);
+
+        font-size:
+            clamp(2.2rem, 4.3vw, 4rem);
+
+        line-height: 1;
+
+        letter-spacing: -.048em;
+    }
+
+    .landing__security-copy > p {
+        margin: 0 0 27px;
+
+        color: #64748b;
+
+        font-size: .97rem;
+        line-height: 1.72;
+    }
+
+    .landing__security-points {
+        display: grid;
+        gap: 17px;
+    }
+
+    .landing__security-point {
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+    }
+
+    .landing__security-point-number {
+        width: 30px;
+        height: 30px;
+
+        flex: 0 0 30px;
+
+        display: grid;
+        place-items: center;
+
+        border-radius: 9px;
+
+        background: #edf8f2;
+
+        color: var(--tp-success);
+
+        font-size: .7rem;
+        font-weight: 900;
+    }
+
+    .landing__security-point strong {
+        display: block;
+
+        color: #28384c;
+
+        font-size: .89rem;
+    }
+
+    .landing__security-point p {
+        margin: 4px 0 0;
+
+        color: #718096;
+
+        font-size: .8rem;
+        line-height: 1.48;
+    }
+
+
+    /* =========================================================
+       BUSINESS / API SECTION
+       ========================================================= */
+
+    .landing__business {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr);
+
+        gap: clamp(40px, 6vw, 90px);
+
+        align-items: center;
+    }
+
+    .landing__business-copy h2 {
+        max-width: 650px;
+
+        margin: 13px 0 17px;
+
+        font-size:
+            clamp(2.2rem, 4vw, 3.8rem);
+
+        line-height: 1;
+
+        letter-spacing: -.045em;
+    }
+
+    .landing__business-copy > p {
+        max-width: 630px;
+
+        margin: 0;
+
+        color: #64748b;
+
+        line-height: 1.7;
+    }
+
+    .landing__business-list {
+        margin-top: 27px;
+
+        display: grid;
+        gap: 11px;
+    }
+
+    .landing__business-list span {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+
+        color: #435167;
+
+        font-size: .85rem;
+        font-weight: 750;
+    }
+
+    .landing__business-list svg {
+        width: 17px;
+        height: 17px;
+
+        color: var(--tp-success);
+    }
+
+    .landing__api-card {
+        padding:
+            clamp(28px, 4vw, 44px);
+
+        border:
+            1px solid
+            #e1e7ec;
+
+        border-radius: 22px;
+
+        background: #fff;
+
+        box-shadow:
+            0 22px 55px
+            rgba(15, 23, 42, .075);
+    }
+
+    .landing__api-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        gap: 15px;
+
+        padding-bottom: 18px;
+
+        border-bottom: 1px solid #edf0f3;
+    }
+
+    .landing__api-card-header strong {
+        color: #243447;
+    }
+
+    .landing__api-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+
+        color: var(--tp-success);
+
+        font-size: .72rem;
+        font-weight: 800;
+    }
+
+    .landing__api-status::before {
+        content: '';
+
+        width: 7px;
+        height: 7px;
+
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .landing__api-code {
+        margin-top: 21px;
+        padding: 20px;
+
+        overflow: hidden;
+
+        border-radius: 14px;
+
+        background: #101d2d;
+
+        color: #d8e5ef;
+
+        font-family:
+            ui-monospace,
+            SFMono-Regular,
+            Menlo,
+            Monaco,
+            Consolas,
+            monospace;
+
+        font-size: .75rem;
+        line-height: 1.75;
+    }
+
+    .landing__api-code .code-green {
+        color: #70dfa5;
+    }
+
+    .landing__api-code .code-gold {
+        color: #f4c17c;
+    }
+
+
+    /* =========================================================
+       FINAL CTA
+       ========================================================= */
+
+    .landing__cta {
+        width: 100%;
+
+        padding:
+            clamp(34px, 5vw, 58px);
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 35px;
+
+        border-radius: 24px;
+
+        color: #fff;
+
+        background:
+            radial-gradient(
+                circle at 90% 15%,
+                rgba(255, 255, 255, .09),
+                transparent 30%
+            ),
+            linear-gradient(
+                135deg,
+                #142e49,
+                #0b1b2c
+            );
+
+        box-shadow:
+            0 28px 60px
+            rgba(15, 23, 42, .15);
+    }
+
+    .landing__cta-copy {
+        max-width: 730px;
+    }
+
+    .landing__cta h2 {
+        margin: 0 0 10px;
+
+        font-size:
+            clamp(1.9rem, 3vw, 2.65rem);
+
+        line-height: 1.05;
+
+        letter-spacing: -.035em;
+    }
+
+    .landing__cta p {
+        margin: 0;
+
+        color: #afc0d1;
+
+        line-height: 1.6;
+    }
+
+    .landing__cta .tp-btn {
+        flex: 0 0 auto;
+
+        min-height: 50px;
+
+        padding-inline: 23px;
+
+        background: #fff;
+        border-color: #fff;
+        color: #10233a;
+
+        border-radius: 11px;
+
+        font-weight: 850;
+    }
+
+    .landing__cta .tp-btn:hover {
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 12px 26px
+            rgba(0, 0, 0, .15);
+    }
+
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
+    .landing__footer {
+        width: 100%;
+
+        padding:
+            55px
+            clamp(22px, 6vw, 105px)
+            38px;
+
+        display: grid;
+        grid-template-columns:
+            1.6fr
+            repeat(3, minmax(140px, .7fr));
+
+        gap: 50px;
+
+        background: #fff;
+
+        color: var(--tp-muted);
+
+        font-size: .78rem;
+    }
+
+    .landing__footer-brand p {
+        max-width: 360px;
+
+        margin: 15px 0 0;
+
+        line-height: 1.65;
+    }
+
+    .landing__footer-title {
+        margin-bottom: 13px;
+
+        color: #26364a;
+
+        font-size: .7rem;
+        font-weight: 900;
+
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+
+    .landing__footer-links {
+        display: grid;
+        gap: 9px;
+    }
+
+    .landing__footer-links a {
+        color: #718096;
+        text-decoration: none;
+    }
+
+    .landing__footer-links a:hover {
+        color: var(--brand-primary);
+    }
+
+    .landing__footer-bottom {
+        width: 100%;
+
+        padding:
+            20px
+            clamp(22px, 6vw, 105px)
+            30px;
+
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+
+        border-top: 1px solid #edf0f3;
+
+        background: #fff;
+
+        color: #8a95a3;
+
+        font-size: .72rem;
+    }
+
+
+    /* =========================================================
+       RESPONSIVE — TABLET
+       ========================================================= */
+
+    @media (max-width: 1050px) {
+
+        .landing__hero {
+            grid-template-columns: 1fr;
+
+            min-height: auto;
+
+            gap: 40px;
+        }
+
+        .landing__hero-copy {
+            max-width: 850px;
+        }
+
+        .landing__visual {
+            min-height: 500px;
+        }
+
+        .landing__visual::before {
+            width: 440px;
+
+            left: 50%;
+            right: auto;
+
+            transform: translateX(-50%);
+        }
+
+        .landing__feature-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+        .landing__use-cases {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+        .landing__security {
+            grid-template-columns: 1fr;
+        }
+
+        .landing__security-card {
+            max-width: 780px;
+        }
+
+        .landing__business {
+            grid-template-columns: 1fr;
+        }
+
+        .landing__api-card {
+            max-width: 850px;
+        }
+    }
+
+
+    /* =========================================================
+       RESPONSIVE — SMALL TABLET
+       ========================================================= */
+
+    @media (max-width: 800px) {
+
+        .landing__nav-links {
+            display: none;
+        }
+
+        .landing__trust-strip-inner {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+        .landing__steps {
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .landing__steps::before {
+            display: none;
+        }
+
+        .landing__step {
+            padding-top: 49px;
+        }
+
+        .landing__cta {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .landing__footer {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+        .landing__footer-brand {
+            grid-column: 1 / -1;
+        }
+    }
+
+
+    /* =========================================================
+       RESPONSIVE — MOBILE
+       ========================================================= */
+
+    @media (max-width: 620px) {
+
+        .landing {
+            margin-top: -30px;
+        }
+
+        .landing__nav {
+            padding:
+                17px
+                18px;
+        }
+
+        .landing__brand {
+            font-size: .95rem;
+        }
+
+        .landing__brand-mark {
+            width: 35px;
+            height: 35px;
+        }
+
+        .landing__nav-actions
+        .tp-btn--secondary {
+            display: none;
+        }
+
+        .landing__nav-actions .tp-btn {
+            min-height: 39px;
+            padding-inline: 14px;
+
+            font-size: .78rem;
+        }
+
+        .landing__hero {
+            padding:
+                48px
+                20px
+                68px;
+
+            gap: 30px;
+        }
+
+        .landing h1 {
+            font-size:
+                clamp(
+                    2.9rem,
+                    14vw,
+                    3.8rem
+                );
+
+            line-height: .96;
+        }
+
+        .landing__lead {
+            font-size: .98rem;
+        }
+
+        .landing__actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .landing__actions .tp-btn {
+            width: 100%;
+        }
+
+        .landing__trust {
+            display: grid;
+            gap: 10px;
+        }
+
+        .landing__visual {
+            min-height: 415px;
+        }
+
+        .landing__visual::before {
+            width: 340px;
+        }
+
+        .landing__visual::after {
+            width: 130px;
+            height: 130px;
+        }
+
+        .landing__orbit {
+            display: none;
+        }
+
+        .landing__phone {
+            width: 225px;
+        }
+
+        .landing__phone-screen {
+            min-height: 392px;
+        }
+
+        .landing__phone-balance {
+            margin-top: 45px;
+        }
+
+        .landing__float {
+            width: 168px;
+
+            padding: 11px;
+
+            font-size: .66rem;
+        }
+
+        .landing__float-icon {
+            width: 31px;
+            height: 31px;
+
+            flex-basis: 31px;
+        }
+
+        .landing__float--top {
+            left: 0;
+            top: 43px;
+        }
+
+        .landing__float--bottom {
+            right: 0;
+            bottom: 41px;
+        }
+
+        .landing__trust-strip-inner {
+            grid-template-columns: 1fr;
+
+            padding:
+                23px
+                20px;
+        }
+
+        .landing__section {
+            padding:
+                70px
+                20px;
+        }
+
+        .landing__section-heading {
+            margin-bottom: 31px;
+        }
+
+        .landing__feature-grid,
+        .landing__use-cases {
+            grid-template-columns: 1fr;
+        }
+
+        .landing__feature {
+            min-height: auto;
+        }
+
+        .landing__security-card,
+        .landing__api-card {
+            padding: 25px;
+        }
+
+        .landing__cta {
+            padding: 30px;
+        }
+
+        .landing__cta .tp-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .landing__footer {
+            grid-template-columns: 1fr;
+
+            padding:
+                42px
+                20px
+                30px;
+        }
+
+        .landing__footer-brand {
+            grid-column: auto;
+        }
+
+        .landing__footer-bottom {
+            padding:
+                20px;
+
+            flex-direction: column;
+        }
+    }
 </style>
 
+
 <div class="landing">
+
+    <!-- ======================================================
+         NAVIGATION
+         ====================================================== -->
+
     <nav class="landing__nav" aria-label="Public navigation">
-        <a class="landing__brand" href="{% url 'landing' %}"><span class="landing__brand-mark">T</span><span>TrustPay Africa</span></a>
-        <div class="landing__nav-links"><a href="#how-it-works">How it works</a><a href="#protection">Protection</a><a href="#businesses">For businesses</a></div>
-        <div class="landing__nav-actions"><a class="tp-btn tp-btn--secondary" href="{% url 'login' %}">Sign in</a><a class="tp-btn" href="{% url 'users:register' %}">Get started</a></div>
+
+        <a class="landing__brand" href="{% url 'landing' %}">
+            <span class="landing__brand-mark">T</span>
+            <span>TrustPay Africa</span>
+        </a>
+
+        <div class="landing__nav-links">
+            <a href="#protection">Protection</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#use-cases">Use cases</a>
+            <a href="#security">Security</a>
+            <a href="#businesses">For businesses</a>
+        </div>
+
+        <div class="landing__nav-actions">
+            <a
+                class="tp-btn tp-btn--secondary"
+                href="{% url 'login' %}"
+            >
+                Sign in
+            </a>
+
+            <a
+                class="tp-btn"
+                href="{% url 'users:register' %}"
+            >
+                Get started
+            </a>
+        </div>
+
     </nav>
 
+
+    <!-- ======================================================
+         HERO
+         ====================================================== -->
+
     <section class="landing__hero">
-        <div>
-            <div class="landing__eyebrow">Payments with purpose</div>
-            <h1>Move money with confidence.</h1>
-            <p class="landing__lead">TrustPay protects every agreement from first payment to final delivery, giving buyers, sellers, and growing businesses one clear place to transact.</p>
-            <div class="landing__actions"><a class="tp-btn" href="{% url 'users:register' %}"><i data-lucide="arrow-up-right"></i>Start an escrow</a><a class="tp-btn tp-btn--secondary" href="#how-it-works">See how it works</a></div>
-            <div class="landing__trust"><span><i data-lucide="shield-check"></i>Funds held securely</span><span><i data-lucide="file-check-2"></i>Clear agreements</span><span><i data-lucide="headphones"></i>Human support</span></div>
+
+        <div class="landing__hero-copy">
+
+            <div class="landing__eyebrow">
+                Secure digital escrow
+            </div>
+
+            <h1>
+                Move money with
+                <span class="landing__headline-accent">
+                    confidence.
+                </span>
+            </h1>
+
+            <p class="landing__lead">
+                TrustPay protects agreements from first payment to
+                final delivery by bringing escrow, verification,
+                agreements, documents and controlled fund release
+                into one trusted transaction environment.
+            </p>
+
+            <div class="landing__actions">
+
+                <a
+                    class="tp-btn"
+                    href="{% url 'users:register' %}"
+                >
+                    <i data-lucide="arrow-up-right"></i>
+                    Start a secure transaction
+                </a>
+
+                <a
+                    class="tp-btn tp-btn--secondary"
+                    href="#how-it-works"
+                >
+                    See how it works
+                </a>
+
+            </div>
+
+            <div class="landing__trust">
+
+                <span>
+                    <i data-lucide="shield-check"></i>
+                    Identity verification
+                </span>
+
+                <span>
+                    <i data-lucide="lock-keyhole"></i>
+                    Controlled fund release
+                </span>
+
+                <span>
+                    <i data-lucide="file-check-2"></i>
+                    Traceable agreements
+                </span>
+
+            </div>
+
         </div>
-        <div class="landing__visual" aria-label="TrustPay transaction preview">
-            <div class="landing__float landing__float--top"><i data-lucide="lock-keyhole"></i><span>Protected until delivery</span></div>
-            <div class="landing__phone"><div class="landing__phone-screen"><div class="landing__phone-top"><span>TRUSTPAY</span><span>09:41</span></div><div class="landing__phone-balance"><small>Available in escrow</small><strong>UGX 25,000,000</strong></div><div class="landing__phone-card"><div class="landing__phone-card-row"><span>Property transfer</span><span class="landing__phone-status">Secured</span></div><div class="landing__phone-card-row"><span>Next milestone</span><span>Title review</span></div></div><div class="landing__phone-card"><div class="landing__phone-card-row"><span>Payment activity</span><span>Today</span></div><div class="landing__phone-card-row"><span>Buyer payment confirmed</span><span>+ UGX 25M</span></div></div></div></div>
-            <div class="landing__float landing__float--bottom"><i data-lucide="badge-check"></i><span>Milestone verified</span></div>
+
+
+        <!-- Transaction preview -->
+
+        <div
+            class="landing__visual"
+            aria-label="TrustPay secured transaction preview"
+        >
+
+            <div class="landing__orbit"></div>
+
+
+            <div class="landing__float landing__float--top">
+
+                <span class="landing__float-icon">
+                    <i data-lucide="badge-check"></i>
+                </span>
+
+                <span>
+                    Participant verified
+                    <small>KYC completed</small>
+                </span>
+
+            </div>
+
+
+            <div class="landing__phone">
+
+                <div class="landing__phone-screen">
+
+                    <div class="landing__phone-top">
+                        <span>TRUSTPAY</span>
+                        <span>09:41</span>
+                    </div>
+
+
+                    <div class="landing__phone-balance">
+
+                        <small>
+                            Funds protected in escrow
+                        </small>
+
+                        <strong>
+                            UGX 25,000,000
+                        </strong>
+
+                        <div class="landing__phone-balance-meta">
+                            <span>TXN-20481</span>
+                            <span>Property</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="landing__phone-card">
+
+                        <div class="landing__phone-card-row">
+                            <span>Property transfer</span>
+
+                            <span class="landing__phone-status">
+                                Secured
+                            </span>
+                        </div>
+
+                        <div class="landing__phone-card-row">
+                            <span>Current milestone</span>
+                            <span>Title review</span>
+                        </div>
+
+                        <div class="landing__progress">
+                            <span class="is-active"></span>
+                            <span class="is-active"></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="landing__phone-card">
+
+                        <div class="landing__phone-card-row">
+                            <span>Payment activity</span>
+                            <span>Today</span>
+                        </div>
+
+                        <div class="landing__phone-card-row">
+                            <span>Buyer payment confirmed</span>
+                            <span>+ UGX 25M</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="landing__float landing__float--bottom">
+
+                <span class="landing__float-icon">
+                    <i data-lucide="shield-check"></i>
+                </span>
+
+                <span>
+                    Funds protected
+                    <small>Release requires approval</small>
+                </span>
+
+            </div>
+
         </div>
+
     </section>
 
-    <section class="landing__section landing__section--soft" id="protection"><div class="landing__inner"><div class="landing__section-heading"><div class="landing__eyebrow">One trusted workflow</div><h2>Every important step, in view.</h2><p>From contracts and compliance to evidence and release, TrustPay keeps the details organized so your attention stays on the work.</p></div><div class="landing__feature-grid"><article class="landing__feature"><div class="landing__feature-icon"><i data-lucide="vault"></i></div><h3>Escrow protection</h3><p>Payments stay protected until the agreed delivery conditions are met.</p></article><article class="landing__feature"><div class="landing__feature-icon"><i data-lucide="file-signature"></i></div><h3>Agreements that stay current</h3><p>Versioned contracts and signatures make every commitment traceable.</p></article><article class="landing__feature"><div class="landing__feature-icon"><i data-lucide="list-checks"></i></div><h3>Evidence-led delivery</h3><p>Milestones, documents, verification, and approvals move together.</p></article></div></div></section>
 
-    <section class="landing__section" id="how-it-works"><div class="landing__inner"><div class="landing__section-heading"><div class="landing__eyebrow">How it works</div><h2>Simple for both sides.</h2><p>A shared workflow reduces uncertainty and gives every party a clear next action.</p></div><div class="landing__steps"><div class="landing__step"><div class="landing__step-number">01 / AGREE</div><h3>Set the terms</h3><p>Create a transaction, invite the other party, and sign a clear agreement.</p></div><div class="landing__step"><div class="landing__step-number">02 / DELIVER</div><h3>Work with visibility</h3><p>Fund securely, share evidence through milestones, and keep progress in one place.</p></div><div class="landing__step"><div class="landing__step-number">03 / RELEASE</div><h3>Complete with confidence</h3><p>Verification and approval unlock release when the agreed work is complete.</p></div></div></div></section>
+    <!-- ======================================================
+         TRUST STRIP
+         ====================================================== -->
 
-    <section class="landing__section landing__section--soft" id="businesses"><div class="landing__inner"><div class="landing__cta"><div><h2>Ready to make the next deal clearer?</h2><p>Create your TrustPay workspace and take the first step.</p></div><a class="tp-btn" href="{% url 'users:register' %}">Create your account <i data-lucide="arrow-up-right"></i></a></div></div></section>
-    <footer class="landing__footer"><span>© 2026 TrustPay Africa</span><span>Secure payments. Clear commitments.</span></footer>
+    <section class="landing__trust-strip">
+
+        <div class="landing__trust-strip-inner">
+
+            <div class="landing__trust-item">
+
+                <span class="landing__trust-item-icon">
+                    <i data-lucide="user-check"></i>
+                </span>
+
+                <span>
+                    <strong>KYC & KYB</strong>
+                    <span>
+                        Verify people and businesses.
+                    </span>
+                </span>
+
+            </div>
+
+
+            <div class="landing__trust-item">
+
+                <span class="landing__trust-item-icon">
+                    <i data-lucide="vault"></i>
+                </span>
+
+                <span>
+                    <strong>Escrow protection</strong>
+                    <span>
+                        Keep funds protected until conditions are met.
+                    </span>
+                </span>
+
+            </div>
+
+
+            <div class="landing__trust-item">
+
+                <span class="landing__trust-item-icon">
+                    <i data-lucide="scroll-text"></i>
+                </span>
+
+                <span>
+                    <strong>Audit visibility</strong>
+                    <span>
+                        Maintain traceable transaction activity.
+                    </span>
+                </span>
+
+            </div>
+
+
+            <div class="landing__trust-item">
+
+                <span class="landing__trust-item-icon">
+                    <i data-lucide="milestone"></i>
+                </span>
+
+                <span>
+                    <strong>Milestone releases</strong>
+                    <span>
+                        Link payments to verified completion.
+                    </span>
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         PROTECTION / FEATURES
+         ====================================================== -->
+
+    <section
+        class="landing__section"
+        id="protection"
+    >
+
+        <div class="landing__inner">
+
+            <div class="landing__section-heading">
+
+                <div class="landing__eyebrow">
+                    One trusted workflow
+                </div>
+
+                <h2>
+                    Every important step,
+                    in view.
+                </h2>
+
+                <p>
+                    From contracts and identity verification to
+                    evidence, payments and release, TrustPay keeps
+                    the transaction organized so both parties know
+                    what has happened and what comes next.
+                </p>
+
+            </div>
+
+
+            <div class="landing__feature-grid">
+
+                <article class="landing__feature">
+
+                    <div class="landing__feature-icon">
+                        <i data-lucide="vault"></i>
+                    </div>
+
+                    <h3>Escrow protection</h3>
+
+                    <p>
+                        Payments remain protected until agreed
+                        transaction conditions have been completed
+                        and approved.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__feature">
+
+                    <div class="landing__feature-icon">
+                        <i data-lucide="file-signature"></i>
+                    </div>
+
+                    <h3>Digital agreements</h3>
+
+                    <p>
+                        Keep agreements, confirmations and transaction
+                        terms connected to the transaction they govern.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__feature">
+
+                    <div class="landing__feature-icon">
+                        <i data-lucide="badge-check"></i>
+                    </div>
+
+                    <h3>Identity verification</h3>
+
+                    <p>
+                        Verify participants before critical financial
+                        and transaction actions are allowed to proceed.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__feature">
+
+                    <div class="landing__feature-icon">
+                        <i data-lucide="list-checks"></i>
+                    </div>
+
+                    <h3>Milestone management</h3>
+
+                    <p>
+                        Organize delivery into clear milestones with
+                        evidence, verification and approval stages.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__feature">
+
+                    <div class="landing__feature-icon">
+                        <i data-lucide="circle-dollar-sign"></i>
+                    </div>
+
+                    <h3>Controlled fund release</h3>
+
+                    <p>
+                        Release funds when agreed conditions and
+                        required approvals have been satisfied.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__feature">
+
+                    <div class="landing__feature-icon">
+                        <i data-lucide="history"></i>
+                    </div>
+
+                    <h3>Transaction history</h3>
+
+                    <p>
+                        Keep important submissions, approvals, payment
+                        activity and decisions visible and traceable.
+                    </p>
+
+                </article>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         HOW IT WORKS
+         ====================================================== -->
+
+    <section
+        class="landing__section landing__section--soft"
+        id="how-it-works"
+    >
+
+        <div class="landing__inner">
+
+            <div
+                class="
+                    landing__section-heading
+                    landing__section-heading--center
+                "
+            >
+
+                <div class="landing__eyebrow">
+                    How it works
+                </div>
+
+                <h2>
+                    Simple for both sides.
+                </h2>
+
+                <p>
+                    A shared transaction workflow reduces uncertainty
+                    and gives each party a clear next action from
+                    agreement through final release.
+                </p>
+
+            </div>
+
+
+            <div class="landing__steps">
+
+                <div class="landing__step">
+
+                    <div class="landing__step-number">
+                        01 · AGREE
+                    </div>
+
+                    <h3>Set the transaction terms</h3>
+
+                    <p>
+                        Create the transaction, identify the parties,
+                        define requirements and establish the conditions
+                        that govern payment.
+                    </p>
+
+                </div>
+
+
+                <div class="landing__step">
+
+                    <div class="landing__step-number">
+                        02 · DELIVER
+                    </div>
+
+                    <h3>Fund and complete the work</h3>
+
+                    <p>
+                        The buyer funds the transaction while the seller
+                        completes the agreed delivery, service or project
+                        milestones.
+                    </p>
+
+                </div>
+
+
+                <div class="landing__step">
+
+                    <div class="landing__step-number">
+                        03 · RELEASE
+                    </div>
+
+                    <h3>Verify and release funds</h3>
+
+                    <p>
+                        Completion is reviewed and approved before
+                        protected funds are released according to
+                        the transaction terms.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         USE CASES
+         ====================================================== -->
+
+    <section
+        class="
+            landing__section
+            landing__section--warm
+        "
+        id="use-cases"
+    >
+
+        <div class="landing__inner">
+
+            <div class="landing__section-heading">
+
+                <div class="landing__eyebrow">
+                    Built for real transactions
+                </div>
+
+                <h2>
+                    One trust framework.
+                    Many ways to transact.
+                </h2>
+
+                <p>
+                    TrustPay can structure transactions where money,
+                    delivery, documentation and verification need
+                    to move together.
+                </p>
+
+            </div>
+
+
+            <div class="landing__use-cases">
+
+                <article class="landing__use-case">
+
+                    <span>01</span>
+
+                    <h3>Land & property</h3>
+
+                    <p>
+                        Hold funds while ownership documents and
+                        transaction conditions are verified.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__use-case">
+
+                    <span>02</span>
+
+                    <h3>Vehicle purchases</h3>
+
+                    <p>
+                        Protect payment until documentation,
+                        inspection and handover requirements are met.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__use-case">
+
+                    <span>03</span>
+
+                    <h3>Construction</h3>
+
+                    <p>
+                        Release project funds progressively as
+                        verified milestones are completed.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__use-case">
+
+                    <span>04</span>
+
+                    <h3>SME procurement</h3>
+
+                    <p>
+                        Link supplier payments to delivery,
+                        inspection and acceptance.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__use-case">
+
+                    <span>05</span>
+
+                    <h3>Professional services</h3>
+
+                    <p>
+                        Structure client payments around agreed
+                        deliverables and approvals.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__use-case">
+
+                    <span>06</span>
+
+                    <h3>Freelance work</h3>
+
+                    <p>
+                        Give providers payment assurance while clients
+                        retain milestone-based approval.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__use-case">
+
+                    <span>07</span>
+
+                    <h3>Goods purchases</h3>
+
+                    <p>
+                        Reduce delivery and payment risk for
+                        high-value purchases.
+                    </p>
+
+                </article>
+
+
+                <article class="landing__use-case">
+
+                    <span>08</span>
+
+                    <h3>Online marketplaces</h3>
+
+                    <p>
+                        Add a protected transaction layer between
+                        independent buyers and sellers.
+                    </p>
+
+                </article>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         SECURITY
+         ====================================================== -->
+
+    <section
+        class="landing__section"
+        id="security"
+    >
+
+        <div class="landing__inner">
+
+            <div class="landing__security">
+
+
+                <div class="landing__security-card">
+
+                    <small>
+                        Transaction protection
+                    </small>
+
+                    <h3>
+                        Built around controlled actions.
+                    </h3>
+
+
+                    <div class="landing__security-list">
+
+
+                        <div class="landing__security-list-item">
+
+                            <i data-lucide="check-circle-2"></i>
+
+                            <span>
+                                <strong>
+                                    Verified participants
+                                </strong>
+
+                                <span>
+                                    Identity verification can be required
+                                    before sensitive transaction actions.
+                                </span>
+                            </span>
+
+                        </div>
+
+
+                        <div class="landing__security-list-item">
+
+                            <i data-lucide="check-circle-2"></i>
+
+                            <span>
+                                <strong>
+                                    Role-based permissions
+                                </strong>
+
+                                <span>
+                                    Users receive access based on their
+                                    responsibilities within the platform.
+                                </span>
+                            </span>
+
+                        </div>
+
+
+                        <div class="landing__security-list-item">
+
+                            <i data-lucide="check-circle-2"></i>
+
+                            <span>
+                                <strong>
+                                    Approval checkpoints
+                                </strong>
+
+                                <span>
+                                    Important actions move through defined
+                                    review and approval stages.
+                                </span>
+                            </span>
+
+                        </div>
+
+
+                        <div class="landing__security-list-item">
+
+                            <i data-lucide="check-circle-2"></i>
+
+                            <span>
+                                <strong>
+                                    Audit records
+                                </strong>
+
+                                <span>
+                                    Critical transaction events remain
+                                    visible throughout the transaction lifecycle.
+                                </span>
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+                <div class="landing__security-copy">
+
+                    <div class="landing__eyebrow">
+                        Trust by design
+                    </div>
+
+                    <h2>
+                        Confidence should come
+                        from the process.
+                    </h2>
+
+                    <p>
+                        TrustPay connects identity, documentation,
+                        transaction requirements, approvals and
+                        payment activity so trust is built into
+                        the workflow rather than left to assumption.
+                    </p>
+
+
+                    <div class="landing__security-points">
+
+
+                        <div class="landing__security-point">
+
+                            <span class="landing__security-point-number">
+                                01
+                            </span>
+
+                            <span>
+                                <strong>
+                                    Know who is transacting.
+                                </strong>
+
+                                <p>
+                                    Verification provides stronger confidence
+                                    before money or assets are committed.
+                                </p>
+                            </span>
+
+                        </div>
+
+
+                        <div class="landing__security-point">
+
+                            <span class="landing__security-point-number">
+                                02
+                            </span>
+
+                            <span>
+                                <strong>
+                                    Know what must happen next.
+                                </strong>
+
+                                <p>
+                                    Clear requirements and milestones give
+                                    everyone visibility into the transaction.
+                                </p>
+                            </span>
+
+                        </div>
+
+
+                        <div class="landing__security-point">
+
+                            <span class="landing__security-point-number">
+                                03
+                            </span>
+
+                            <span>
+                                <strong>
+                                    Know why money was released.
+                                </strong>
+
+                                <p>
+                                    Verification and approvals make fund
+                                    release decisions easier to understand
+                                    and trace.
+                                </p>
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         FOR BUSINESSES
+         ====================================================== -->
+
+    <section
+        class="
+            landing__section
+            landing__section--soft
+        "
+        id="businesses"
+    >
+
+        <div class="landing__inner">
+
+            <div class="landing__business">
+
+
+                <div class="landing__business-copy">
+
+                    <div class="landing__eyebrow">
+                        Trust for businesses
+                    </div>
+
+                    <h2>
+                        Bring protected transactions
+                        into your own workflow.
+                    </h2>
+
+                    <p>
+                        TrustPay can support businesses and digital
+                        platforms that need transaction protection,
+                        participant verification and structured
+                        payment workflows.
+                    </p>
+
+
+                    <div class="landing__business-list">
+
+                        <span>
+                            <i data-lucide="check"></i>
+                            Marketplace transaction protection
+                        </span>
+
+                        <span>
+                            <i data-lucide="check"></i>
+                            Business escrow workflows
+                        </span>
+
+                        <span>
+                            <i data-lucide="check"></i>
+                            Verification and document requirements
+                        </span>
+
+                        <span>
+                            <i data-lucide="check"></i>
+                            API-ready transaction infrastructure
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="landing__api-card">
+
+                    <div class="landing__api-card-header">
+
+                        <strong>
+                            TrustPay API
+                        </strong>
+
+                        <span class="landing__api-status">
+                            Available
+                        </span>
+
+                    </div>
+
+
+                    <div class="landing__api-code">
+
+                        <div>
+                            <span class="code-green">POST</span>
+                            /api/v1/transactions/
+                        </div>
+
+                        <br>
+
+                        <div>
+                            {
+                        </div>
+
+                        <div>
+                            &nbsp;&nbsp;
+                            <span class="code-gold">
+                                "transaction_type"
+                            </span>:
+                            "property_transaction",
+                        </div>
+
+                        <div>
+                            &nbsp;&nbsp;
+                            <span class="code-gold">
+                                "currency"
+                            </span>:
+                            "UGX",
+                        </div>
+
+                        <div>
+                            &nbsp;&nbsp;
+                            <span class="code-gold">
+                                "escrow_required"
+                            </span>:
+                            true
+                        </div>
+
+                        <div>
+                            }
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         FINAL CTA
+         ====================================================== -->
+
+    <section class="landing__section">
+
+        <div class="landing__inner">
+
+            <div class="landing__cta">
+
+                <div class="landing__cta-copy">
+
+                    <h2>
+                        Ready to make the next transaction clearer?
+                    </h2>
+
+                    <p>
+                        Create your TrustPay account and start a
+                        transaction with structured terms,
+                        protected funds and clear release conditions.
+                    </p>
+
+                </div>
+
+                <a
+                    class="tp-btn"
+                    href="{% url 'users:register' %}"
+                >
+                    Create your account
+                    <i data-lucide="arrow-up-right"></i>
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         FOOTER
+         ====================================================== -->
+
+    <footer>
+
+        <div class="landing__footer">
+
+
+            <div class="landing__footer-brand">
+
+                <a
+                    class="landing__brand"
+                    href="{% url 'landing' %}"
+                >
+
+                    <span class="landing__brand-mark">
+                        T
+                    </span>
+
+                    <span>
+                        TrustPay Africa
+                    </span>
+
+                </a>
+
+                <p>
+                    Secure digital transactions through escrow,
+                    verification, structured agreements and
+                    controlled fund release.
+                </p>
+
+            </div>
+
+
+            <div>
+
+                <div class="landing__footer-title">
+                    Product
+                </div>
+
+                <div class="landing__footer-links">
+
+                    <a href="#protection">
+                        Protection
+                    </a>
+
+                    <a href="#how-it-works">
+                        How it works
+                    </a>
+
+                    <a href="#use-cases">
+                        Use cases
+                    </a>
+
+                    <a href="{% url 'login' %}">
+                        Sign in
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <div class="landing__footer-title">
+                    Trust
+                </div>
+
+                <div class="landing__footer-links">
+
+                    <a href="#security">
+                        Security
+                    </a>
+
+                    <a href="#protection">
+                        Verification
+                    </a>
+
+                    <a href="#how-it-works">
+                        Escrow process
+                    </a>
+
+                    <a href="#businesses">
+                        Business solutions
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <div class="landing__footer-title">
+                    Account
+                </div>
+
+                <div class="landing__footer-links">
+
+                    <a href="{% url 'login' %}">
+                        Sign in
+                    </a>
+
+                    <a href="{% url 'users:register' %}">
+                        Create account
+                    </a>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="landing__footer-bottom">
+
+            <span>
+                © 2026 TrustPay Africa.
+                All rights reserved.
+            </span>
+
+            <span>
+                Secure payments.
+                Clear commitments.
+                Controlled release.
+            </span>
+
+        </div>
+
+    </footer>
+
 </div>
+
 {% endblock %}
