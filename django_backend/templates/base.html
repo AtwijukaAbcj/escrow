@@ -377,7 +377,7 @@
 </head>
 <body>
     <div class="tp-shell">
-        <header class="tp-topbar">
+        {% if request.path != '/' %}<header class="tp-topbar">
             <div class="tp-topbar__inner">
                 <div class="tp-brand">
                     <div class="tp-brand__logo">T</div>
@@ -401,7 +401,7 @@
                 <nav class="tp-topbar__actions"><a href="{% url 'login' %}">Sign in</a></nav>
                 {% endif %}
             </div>
-        </header>
+        </header>{% endif %}
 
         <main class="tp-container">
             {% if user.is_authenticated %}
@@ -410,7 +410,7 @@
                     <div class="tp-sidebar__group">
                         <div class="tp-sidebar__title">Workspace</div>
                         <div class="tp-menu">
-                            <a class="{% if request.path == '/' or request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}"><i data-lucide="layout-dashboard" aria-hidden="true"></i>Overview</a>
+                            <a class="{% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}"><i data-lucide="layout-dashboard" aria-hidden="true"></i>Overview</a>
                             {% if 'transactions.view' in user_permissions %}<a class="{% if request.path|slice:':13' == '/transactions' %}active{% endif %}" href="{% url 'transactions' %}"><i data-lucide="arrow-left-right" aria-hidden="true"></i>Escrow transactions</a>{% endif %}
                             {% if 'milestones.submit' in user_permissions or 'milestones.approve' in user_permissions or 'milestones.verify' in user_permissions %}<a class="{% if request.path|slice:':11' == '/milestones' %}active{% endif %}" href="{% url 'milestones' %}"><i data-lucide="milestone" aria-hidden="true"></i>Milestones &amp; delivery</a>{% endif %}
                             {% if 'contracts.view' in user_permissions %}<a class="{% if request.path|slice:':10' == '/contracts' %}active{% endif %}" href="{% url 'contracts' %}"><i data-lucide="file-signature" aria-hidden="true"></i>Contracts</a>{% endif %}

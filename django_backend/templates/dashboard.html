@@ -17,23 +17,23 @@
         <div class="tp-summary-grid">
             <div class="tp-stat tp-card">
                 <span class="tp-stat__label">Active escrow</span>
-                <div class="tp-stat__value">$1.42M</div>
-                <div class="tp-stat__meta">+12.4% vs last month</div>
+                <div class="tp-stat__value">{{ summary.active_escrow|floatformat:2 }}</div>
+                <div class="tp-stat__meta">Available escrow balance</div>
             </div>
             <div class="tp-stat tp-card">
                 <span class="tp-stat__label">Transactions</span>
-                <div class="tp-stat__value">248</div>
-                <div class="tp-stat__meta">+8 new today</div>
+                <div class="tp-stat__value">{{ summary.transaction_count }}</div>
+                <div class="tp-stat__meta">Visible transactions</div>
             </div>
             <div class="tp-stat tp-card">
                 <span class="tp-stat__label">Pending KYC</span>
-                <div class="tp-stat__value">34</div>
-                <div class="tp-stat__meta">6 require review</div>
+                <div class="tp-stat__value">{{ summary.pending_kyc }}</div>
+                <div class="tp-stat__meta">Awaiting compliance action</div>
             </div>
             <div class="tp-stat tp-card">
                 <span class="tp-stat__label">Released</span>
-                <div class="tp-stat__value">$842K</div>
-                <div class="tp-stat__meta">92% on time</div>
+                <div class="tp-stat__value">{{ summary.released_funds|floatformat:2 }}</div>
+                <div class="tp-stat__meta">Total released funds</div>
             </div>
         </div>
 

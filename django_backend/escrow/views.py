@@ -65,6 +65,10 @@ def staff_required(view):
     return role_required('staff')(view)
 
 
+def landing_view(request):
+    return render(request, 'landing.html')
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -209,10 +213,18 @@ class KycSubmissionForm(forms.ModelForm):
 @login_required
 @permission_required('transactions.view')
 def dashboard_view(request):
-    transactions = visible_transactions(request.user).order_by('-createdAt')[:5]
+    visible = visible_transactions(request.user)
+    transactions = visible.order_by('-createdAt')[:5]
     party = participant_party(request.user)
+    summary = {
+        'active_escrow': sum((item.available_escrow_balance for item in visible), 0),
+        'transaction_count': visible.count(),
+        'pending_kyc': KycSubmission.objects.filter(verificationStatus__in=('submitted', 'under_review', 'additional_info_required')).count(),
+        'released_funds': visible.aggregate(total=models.Sum('releasedAmount'))['total'] or 0,
+    }
     return render(request, 'dashboard.html', {
         'transactions': transactions,
+        'summary': summary,
         'kyc_required': not is_staff_user(request.user) and not participant_is_verified(request.user),
         'kyc_submission': getattr(party, 'kyc_submission', None) if party else None,
     })

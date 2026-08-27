@@ -3,28 +3,58 @@
 {% block title %}Sign in | TrustPay Africa{% endblock %}
 
 {% block content %}
-<div class="tp-card tp-section tp-auth">
-    <div style="margin-bottom:24px;">
-        <h1 style="margin:0; font-size:1.6rem;">Sign in</h1>
-        <p style="margin:8px 0 0; color:#5f6d7a;">Access your TrustPay Africa workspace.</p>
+<style>
+    .login-shell { min-height:calc(100vh - 150px); display:grid; place-items:center; }
+    .login-workspace { width:min(980px,100%); display:grid; grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr); overflow:hidden; border:1px solid var(--brand-line); border-radius:20px; background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.09); }
+    .login-form-panel { padding:48px 52px; }
+    .login-brand { display:flex; align-items:center; gap:10px; color:var(--brand-dark); font-weight:900; }
+    .login-brand__mark { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:#111827; color:#fff; }
+    .login-form-panel h1 { margin:46px 0 10px; color:#0b1738; font-size:2.25rem; letter-spacing:-.04em; }
+    .login-intro { margin:0 0 30px; color:var(--brand-muted); line-height:1.6; }
+    .login-field { margin-bottom:18px; }
+    .login-field label { display:flex; justify-content:space-between; margin-bottom:8px; color:#334155; font-size:.8rem; font-weight:800; }
+    .login-field input { width:100%; box-sizing:border-box; min-height:48px; padding:0 14px; border:1px solid #d5dce5; border-radius:10px; color:var(--brand-dark); font:inherit; background:#fff; }
+    .login-field input:focus { outline:0; border-color:var(--brand-primary); box-shadow:0 0 0 3px rgba(229,79,56,.12); }
+    .login-submit { width:100%; min-height:50px; display:inline-flex; align-items:center; justify-content:center; gap:8px; margin-top:8px; }
+    .login-create { margin:24px 0 0; color:var(--brand-muted); text-align:center; font-size:.88rem; }
+    .login-create a { color:var(--brand-primary); font-weight:800; }
+    .login-aside { position:relative; overflow:hidden; padding:48px 42px; background:#10233a; color:#fff; }
+    .login-aside::after { content:''; position:absolute; width:260px; height:260px; right:-105px; bottom:-110px; border:1px solid rgba(255,255,255,.2); border-radius:50%; }
+    .login-aside__eyebrow { display:flex; align-items:center; gap:9px; color:#f6a18f; font-size:.72rem; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
+    .login-aside__eyebrow::before { content:''; width:28px; height:2px; background:#f6a18f; }
+    .login-aside h2 { max-width:300px; margin:24px 0 14px; font-size:2rem; line-height:1.05; letter-spacing:-.035em; }
+    .login-aside > p { max-width:330px; color:#b6c5d5; line-height:1.65; font-size:.9rem; }
+    .login-benefits { display:grid; gap:17px; margin-top:38px; }
+    .login-benefit { display:flex; align-items:flex-start; gap:12px; }
+    .login-benefit svg { width:18px; color:#f6a18f; flex:0 0 auto; margin-top:2px; }
+    .login-benefit strong { display:block; font-size:.84rem; }
+    .login-benefit span { display:block; margin-top:3px; color:#b6c5d5; font-size:.77rem; line-height:1.45; }
+    .login-back { display:inline-flex; align-items:center; gap:7px; margin-top:36px; color:#fff; font-size:.82rem; font-weight:800; text-decoration:none; }
+    .login-back svg { width:16px; }
+    @media (max-width:760px) { .login-shell { min-height:auto; } .login-workspace { grid-template-columns:1fr; } .login-form-panel { padding:34px 26px; } .login-form-panel h1 { margin-top:38px; } .login-aside { padding:34px 26px; } .login-aside h2 { font-size:1.7rem; } }
+</style>
+<div class="login-shell">
+    <div class="login-workspace">
+        <section class="login-form-panel">
+            <a class="login-brand" href="{% url 'landing' %}"><span class="login-brand__mark">T</span><span>TrustPay Africa</span></a>
+            <h1>Welcome back.</h1>
+            <p class="login-intro">Sign in to manage your agreements, payments, delivery milestones, and protected transactions.</p>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
+                <div class="login-field"><label for="{{ form.username.id_for_label }}">Email or username</label>{{ form.username }}{% for error in form.username.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>
+                <div class="login-field"><label for="{{ form.password.id_for_label }}">Password</label>{{ form.password }}{% for error in form.password.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>
+                <button class="tp-btn login-submit" type="submit"><i data-lucide="log-in"></i>Sign in securely</button>
+            </form>
+            <p class="login-create">New to TrustPay Africa? <a href="{% url 'users:register' %}">Create an account</a></p>
+        </section>
+        <aside class="login-aside">
+            <div class="login-aside__eyebrow">Your transaction centre</div>
+            <h2>Clarity from payment to completion.</h2>
+            <p>Keep every commitment visible and every release tied to the work that earned it.</p>
+            <div class="login-benefits"><div class="login-benefit"><i data-lucide="shield-check"></i><div><strong>Protected payments</strong><span>Funds move when the agreed conditions are met.</span></div></div><div class="login-benefit"><i data-lucide="file-signature"></i><div><strong>Clear agreements</strong><span>Contracts and signatures stay connected to each transaction.</span></div></div><div class="login-benefit"><i data-lucide="list-checks"></i><div><strong>Visible progress</strong><span>Milestones and evidence keep both sides aligned.</span></div></div></div>
+            <a class="login-back" href="{% url 'landing' %}"><i data-lucide="arrow-left"></i>Back to TrustPay Africa</a>
+        </aside>
     </div>
-    <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}
-        <div class="tp-form-error">{{ form.non_field_errors }}</div>
-        {% endif %}
-        <div class="tp-field" style="margin-bottom:18px;">
-            {{ form.username.label_tag }}
-            {{ form.username }}
-            {% for error in form.username.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
-        </div>
-        <div class="tp-field" style="margin-bottom:24px;">
-            {{ form.password.label_tag }}
-            {{ form.password }}
-            {% for error in form.password.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
-        </div>
-        <button class="tp-btn" type="submit" style="width:100%;">Sign in</button>
-    </form>
-    <p style="margin:18px 0 0; text-align:center; color:#5f6d7a;">New to TrustPay Africa? <a href="{% url 'users:register' %}">Create an account</a></p>
 </div>
 {% endblock %}

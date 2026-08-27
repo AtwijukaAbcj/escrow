@@ -3,26 +3,56 @@
 {% block title %}Create account | TrustPay Africa{% endblock %}
 
 {% block content %}
-<div class="tp-card tp-section tp-auth">
-    <div style="margin-bottom:24px;">
-        <h1 style="margin:0; font-size:1.6rem;">Create your account</h1>
-        <p style="margin:8px 0 0; color:#5f6d7a;">Join TrustPay Africa as a buyer or seller.</p>
+<style>
+    .register-shell { min-height:calc(100vh - 150px); display:grid; place-items:center; }
+    .register-workspace { width:min(1020px,100%); display:grid; grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr); overflow:hidden; border:1px solid var(--brand-line); border-radius:20px; background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.09); }
+    .register-form-panel { padding:44px 50px; }
+    .register-brand { display:flex; align-items:center; gap:10px; color:var(--brand-dark); font-weight:900; text-decoration:none; }
+    .register-brand__mark { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:#111827; color:#fff; }
+    .register-form-panel h1 { margin:38px 0 10px; color:#0b1738; font-size:2.25rem; letter-spacing:-.04em; }
+    .register-intro { margin:0 0 28px; color:var(--brand-muted); line-height:1.6; }
+    .register-form-panel .tp-form-grid { gap:16px; }
+    .register-form-panel .tp-field label { color:#334155; font-size:.8rem; font-weight:800; }
+    .register-form-panel .tp-field input, .register-form-panel .tp-field select { min-height:46px; box-sizing:border-box; }
+    .register-submit { width:100%; min-height:50px; display:inline-flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; }
+    .register-signin { margin:20px 0 0; color:var(--brand-muted); text-align:center; font-size:.88rem; }
+    .register-signin a { color:var(--brand-primary); font-weight:800; }
+    .register-aside { position:relative; overflow:hidden; padding:46px 40px; background:#10233a; color:#fff; }
+    .register-aside::before { content:''; position:absolute; width:320px; height:320px; right:-150px; top:40px; border:1px solid rgba(255,255,255,.18); border-radius:50%; }
+    .register-aside__eyebrow { display:flex; align-items:center; gap:9px; color:#f6a18f; font-size:.72rem; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
+    .register-aside__eyebrow::before { content:''; width:28px; height:2px; background:#f6a18f; }
+    .register-aside h2 { position:relative; max-width:300px; margin:24px 0 14px; font-size:2rem; line-height:1.05; letter-spacing:-.035em; }
+    .register-aside > p { position:relative; max-width:320px; color:#b6c5d5; line-height:1.65; font-size:.9rem; }
+    .register-paths { position:relative; display:grid; gap:12px; margin-top:34px; }
+    .register-path { display:flex; align-items:flex-start; gap:12px; padding:14px; border:1px solid rgba(255,255,255,.15); border-radius:12px; background:rgba(255,255,255,.06); }
+    .register-path svg { width:19px; color:#f6a18f; flex:0 0 auto; margin-top:1px; }
+    .register-path strong { display:block; font-size:.84rem; }
+    .register-path span { display:block; margin-top:3px; color:#b6c5d5; font-size:.76rem; line-height:1.45; }
+    .register-back { position:relative; display:inline-flex; align-items:center; gap:7px; margin-top:30px; color:#fff; font-size:.82rem; font-weight:800; text-decoration:none; }
+    .register-back svg { width:16px; }
+    @media (max-width:760px) { .register-shell { min-height:auto; } .register-workspace { grid-template-columns:1fr; } .register-form-panel { padding:34px 26px; } .register-form-panel h1 { margin-top:34px; } .register-aside { padding:34px 26px; } .register-aside h2 { font-size:1.7rem; } }
+</style>
+<div class="register-shell">
+    <div class="register-workspace">
+        <section class="register-form-panel">
+            <a class="register-brand" href="{% url 'landing' %}"><span class="register-brand__mark">T</span><span>TrustPay Africa</span></a>
+            <h1>Start with trust.</h1>
+            <p class="register-intro">Create your workspace to make agreements clearer, payments safer, and delivery easier to follow.</p>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
+                <div class="tp-form-grid">{% for field in form %}<div class="tp-field">{{ field.label_tag }}{{ field }}{% if field.help_text %}<div style="margin-top:6px;color:var(--brand-muted);font-size:.8rem;line-height:1.45;">{{ field.help_text|safe }}</div>{% endif %}{% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>{% endfor %}</div>
+                <button class="tp-btn register-submit" type="submit"><i data-lucide="user-plus"></i>Create account</button>
+            </form>
+            <p class="register-signin">Already registered? <a href="{% url 'login' %}">Sign in</a></p>
+        </section>
+        <aside class="register-aside">
+            <div class="register-aside__eyebrow">One shared workspace</div>
+            <h2>Bring both sides onto the same page.</h2>
+            <p>Whether you are buying, providing, or building a business relationship, your next step stays visible.</p>
+            <div class="register-paths"><div class="register-path"><i data-lucide="shopping-bag"></i><div><strong>For buyers</strong><span>Fund confidently and approve work against agreed milestones.</span></div></div><div class="register-path"><i data-lucide="briefcase-business"></i><div><strong>For sellers</strong><span>Show progress clearly and release funds when delivery is verified.</span></div></div><div class="register-path"><i data-lucide="building-2"></i><div><strong>For businesses</strong><span>Keep your teams, documents, contracts, and payments organized.</span></div></div></div>
+            <a class="register-back" href="{% url 'landing' %}"><i data-lucide="arrow-left"></i>Back to TrustPay Africa</a>
+        </aside>
     </div>
-    <form method="post">
-        {% csrf_token %}
-        {% if form.non_field_errors %}<div class="tp-form-error">{{ form.non_field_errors }}</div>{% endif %}
-        <div class="tp-form-grid">
-            {% for field in form %}
-            <div class="tp-field">
-                {{ field.label_tag }}
-                {{ field }}
-                {% if field.help_text %}<div style="margin-top:6px; color:#5f6d7a; font-size:.8rem;">{{ field.help_text|safe }}</div>{% endif %}
-                {% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
-            </div>
-            {% endfor %}
-        </div>
-        <button class="tp-btn" type="submit" style="width:100%; margin-top:24px;">Create account</button>
-    </form>
-    <p style="margin:18px 0 0; text-align:center; color:#5f6d7a;">Already registered? <a href="{% url 'login' %}">Sign in</a></p>
 </div>
 {% endblock %}
