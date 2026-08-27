@@ -9,7 +9,6 @@
        TRUSTPAY AFRICA — PUBLIC LANDING PAGE
        Full-width layout
        ========================================================= */
-
 .landing {
     --tp-navy: #0b1738;
     --tp-navy-2: #10233a;
@@ -22,20 +21,21 @@
     --tp-success: #138a4b;
     --tp-white: #ffffff;
 
-    /* Break out of base.html's container */
+    /* Force landing page to span the entire browser viewport */
     width: 100vw;
     max-width: none;
 
     position: relative;
-    left: 50%;
-    right: 50%;
 
-    margin-left: -50vw;
-    margin-right: -50vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+
     margin-top: -30px;
     margin-bottom: -60px;
 
-    overflow: hidden;
+    padding: 0;
+
+    overflow-x: hidden;
 
     background: #fff;
     color: var(--tp-navy);
