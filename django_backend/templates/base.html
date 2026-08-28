@@ -405,6 +405,24 @@
             .tp-requirements-layout aside { position: static; }
             .tp-requirements-filter { grid-template-columns:repeat(2, minmax(0, 1fr)); }
             .tp-requirements-filter__actions { grid-column:1 / -1; }
+            .tp-form-grid { grid-template-columns: 1fr; }
+            .tp-field input,
+            .tp-field select,
+            .tp-field textarea {
+                min-height: 46px;
+                font-size: 1rem;
+            }
+            .tp-table {
+                display: block;
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tp-table th,
+            .tp-table td {
+                padding: 10px 8px;
+                white-space: nowrap;
+            }
             .tp-topbar__actions {
                 display: none;
                 width: 100%;
