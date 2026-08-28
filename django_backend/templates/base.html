@@ -103,6 +103,23 @@
             font-size: .85rem;
             font-weight: 700;
         }
+        .tp-mobile-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--brand-line);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--brand-dark);
+            cursor: pointer;
+            padding: 0;
+        }
+        .tp-mobile-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
         .tp-topbar__actions a:hover,
         .tp-topbar__actions a.active {
             color: var(--brand-primary);
@@ -352,18 +369,35 @@
         .tp-permission-list input, .tp-tree-select-all input { accent-color: var(--brand-primary); }
         .tp-requirements-layout aside { position: sticky; top: 92px; }
         @media (max-width: 980px) {
+            .tp-app-layout { grid-template-columns: 1fr; }
             .tp-page { grid-template-columns: 1fr; }
+            .tp-sidebar { position: static; }
             .tp-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .tp-split-form { grid-template-columns: 1fr; }
             .tp-requirements-filter { grid-template-columns:repeat(3, minmax(0, 1fr)); }
             .tp-requirements-filter__actions { grid-column:1 / -1; }
+            .tp-topbar__inner { flex-wrap: wrap; }
+            .tp-topbar__actions { flex-wrap: wrap; justify-content: flex-end; }
         }
         @media (max-width: 640px) {
             .tp-summary-grid { grid-template-columns: 1fr; }
+            .tp-app-layout { grid-template-columns: 1fr; }
             .tp-nav { display: none; }
-            .tp-topbar__inner { padding: 14px 16px; }
-            .tp-container { width: min(100% - 20px, 100%); }
+            .tp-mobile-toggle { display: inline-flex; }
+            .tp-topbar__inner { padding: 12px 14px; gap: 10px; }
+            .tp-brand__text { font-size: .96rem; }
+            .tp-container { width: min(100% - 16px, 100%); margin-top: 16px; }
             .tp-section { padding: 18px; }
+            .tp-sidebar {
+                display: none;
+                padding: 12px;
+            }
+            .tp-sidebar.is-open {
+                display: block;
+            }
+            .tp-sidebar__group { margin-bottom: 14px; }
+            .tp-menu a,
+            .tp-menu-details summary { padding: 10px 11px; }
             .tp-permission-list { grid-template-columns: 1fr; }
             .tp-permission-tree__header { align-items: flex-start; flex-direction: column; }
             .tp-page-heading { align-items:flex-start; flex-direction:column; }
@@ -371,6 +405,18 @@
             .tp-requirements-layout aside { position: static; }
             .tp-requirements-filter { grid-template-columns:repeat(2, minmax(0, 1fr)); }
             .tp-requirements-filter__actions { grid-column:1 / -1; }
+            .tp-topbar__actions {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                padding-top: 8px;
+            }
+            .tp-topbar__actions.is-open {
+                display: flex;
+            }
+            .tp-topbar__actions a { font-size: .72rem; padding: 9px 10px; }
+            .tp-notification-panel { right: 0; left: 0; width: min(92vw, 320px); }
         }
     </style>
     {% block extra_head %}{% endblock %}
@@ -383,6 +429,9 @@
                     <div class="tp-brand__logo">T</div>
                     <div class="tp-brand__text">TrustPay Africa</div>
                 </div>
+                <button class="tp-mobile-toggle" type="button" aria-label="Toggle menu" aria-expanded="false">
+                    <i data-lucide="menu" aria-hidden="true"></i>
+                </button>
                 {% if user.is_authenticated %}
                 <nav class="tp-topbar__actions" aria-label="Account navigation">
                     <details class="tp-notification-menu">
@@ -406,7 +455,7 @@
         <main class="tp-container">
             {% if user.is_authenticated %}
             <div class="tp-app-layout">
-                <aside class="tp-card tp-sidebar">
+                <aside class="tp-card tp-sidebar" id="mobile-sidebar">
                     <div class="tp-sidebar__group">
                         <div class="tp-sidebar__title">Workspace</div>
                         <div class="tp-menu">
@@ -464,5 +513,24 @@
         </main>
     </div>
 </body>
-<script>document.addEventListener('DOMContentLoaded', function () { if (window.lucide) window.lucide.createIcons(); });</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.lucide) window.lucide.createIcons();
+
+        const toggleButton = document.querySelector('.tp-mobile-toggle');
+        const topbarActions = document.querySelector('.tp-topbar__actions');
+        const sidebar = document.getElementById('mobile-sidebar');
+
+        if (toggleButton && topbarActions) {
+            toggleButton.addEventListener('click', function () {
+                const isOpen = topbarActions.classList.toggle('is-open');
+                toggleButton.setAttribute('aria-expanded', String(isOpen));
+
+                if (sidebar) {
+                    sidebar.classList.toggle('is-open', isOpen);
+                }
+            });
+        }
+    });
+</script>
 </html>
