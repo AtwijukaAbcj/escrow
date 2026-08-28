@@ -23,15 +23,16 @@
     --tp-shadow-md: 0 24px 70px rgba(15, 23, 42, .10);
     --tp-shadow-lg: 0 40px 100px rgba(15, 23, 42, .16);
 
-    width: 100vw;
-    max-width: none;
+    width: 100%;
+    max-width: 100%;
     position: relative;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
+    margin-left: 0;
+    margin-right: 0;
     margin-top: -30px;
     margin-bottom: -60px;
     padding: 0;
-    overflow-x: clip;
+    overflow-x: hidden;
+    box-sizing: border-box;
 
     font-family: 'Inter', sans-serif;
 
@@ -1588,13 +1589,18 @@
 
 /* =========================================================
    FONT + READABILITY OVERRIDES
-   FS Me throughout the landing page with larger text.
+   Google Inter throughout the landing page with larger text.
    ========================================================= */
 .landing,
 .landing *,
 .landing *::before,
-.landing *::after {
-    font-family: "FS Me", "Trebuchet MS", Arial, sans-serif !important;
+.landing *::after,
+.landing button,
+.landing input,
+.landing textarea,
+.landing select,
+.landing a {
+    font-family: "Inter", Arial, Helvetica, sans-serif !important;
 }
 
 /* Navigation */
@@ -1681,9 +1687,10 @@
 .landing__business-list span { font-size: .98rem; }
 .landing__api-card-header strong { font-size: 1.05rem; }
 .landing__api-status { font-size: .82rem; }
-/* Keep code readable but use FS Me too, as requested. */
-.landing__api-code {
-    font-family: "FS Me", "Trebuchet MS", Arial, sans-serif !important;
+/* Keep API/code content looking like code. */
+.landing__api-code,
+.landing__api-code * {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace !important;
     font-size: .88rem;
 }
 
@@ -1713,6 +1720,76 @@
     .landing__step p,
     .landing__use-case p { font-size: .96rem; }
     .landing__float { font-size: .73rem; }
+}
+
+
+/* =========================================================
+   WIDTH / OVERFLOW SAFETY
+   ========================================================= */
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.landing,
+.landing__nav,
+.landing__hero,
+.landing__trust-strip,
+.landing__trust-strip-inner,
+.landing__section,
+.landing__inner,
+.landing__feature-grid,
+.landing__steps,
+.landing__use-cases,
+.landing__security,
+.landing__business,
+.landing__footer,
+.landing__footer-bottom {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.landing *,
+.landing *::before,
+.landing *::after {
+    box-sizing: border-box;
+}
+
+.landing img,
+.landing svg,
+.landing video,
+.landing canvas {
+    max-width: 100%;
+}
+
+.landing__nav-actions,
+.landing__nav-links,
+.landing__feature,
+.landing__step,
+.landing__use-case,
+.landing__security-card,
+.landing__security-copy,
+.landing__business-copy,
+.landing__api-card {
+    min-width: 0;
+}
+
+@media (max-width: 1180px) {
+    .landing__nav {
+        gap: 18px;
+        padding-left: clamp(18px, 3vw, 42px);
+        padding-right: clamp(18px, 3vw, 42px);
+    }
+
+    .landing__nav-links {
+        gap: clamp(14px, 1.8vw, 24px);
+    }
+
+    .landing__nav-actions .tp-btn {
+        padding-inline: 14px;
+    }
 }
 
 </style>
