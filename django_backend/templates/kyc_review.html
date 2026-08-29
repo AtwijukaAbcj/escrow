@@ -21,7 +21,21 @@
     </div>
     <div style="margin-top:24px;">
         <strong>Identification image</strong>
-        <div style="margin-top:10px;"><a href="{{ submission.idImage.url }}" target="_blank" rel="noopener"><img src="{{ submission.idImage.url }}" alt="Submitted identification" style="max-width:100%; max-height:420px; border:1px solid var(--brand-line); border-radius:10px;"></a></div>
+       {% if submission.idImage %}
+    <div style="margin-top:10px;">
+        <a href="{{ submission.idImage.url }}" target="_blank" rel="noopener">
+            <img
+                src="{{ submission.idImage.url }}"
+                alt="Submitted identification"
+                style="max-width:100%; max-height:420px; border:1px solid var(--brand-line); border-radius:10px;"
+            >
+        </a>
+    </div>
+{% else %}
+    <div style="margin-top:10px; color:var(--text-muted, #666);">
+        No identification image uploaded.
+    </div>
+{% endif %}
     </div>
     <form method="post" style="margin-top:24px;">
         {% csrf_token %}
