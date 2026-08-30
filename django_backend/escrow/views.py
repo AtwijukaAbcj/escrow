@@ -794,6 +794,13 @@ def document_requirement_toggle_active_view(request, requirement_id):
 def document_requirement_delete_view(request, requirement_id):
     requirement = get_object_or_404(DocumentRequirement, pk=requirement_id)
     if request.method == 'POST':
+        can_archive, message = requirement.can_be_archived()
+        if not can_archive:
+            return render(request, 'document_requirements.html', {
+                'error': message,
+                'requirements': DocumentRequirement.objects.select_related('categoryDefinition', 'documentTypeDefinition', 'verifierRole'),
+                'categories': DocumentCategory.objects.filter(isActive=True),
+            }, status=400)
         requirement.status = 'archived'
         requirement.archivedAt = timezone.now()
         requirement.lastModifiedBy = request.user

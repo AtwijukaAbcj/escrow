@@ -599,9 +599,39 @@ class Milestone(models.Model):
             total = self.__class__.objects.filter(transaction_id=self.transaction_id).exclude(pk=self.pk).filter(status__in=('pending', 'in_progress', 'submitted', 'under_review', 'changes_required', 'approved', 'release_eligible')).aggregate(total=Sum('amount'))['total'] or 0
             if total + self.amount > self.transaction.value:
                 raise ValidationError({'amount': 'Active milestone amounts cannot exceed the transaction value.'})
+        
+        # Check status transitions on update
+        if self.pk:
+            old_milestone = self.__class__.objects.get(pk=self.pk)
+            if old_milestone.status != self.status:
+                if not old_milestone.can_transition_to(self.status):
+                    valid_statuses = ', '.join(old_milestone.get_valid_next_statuses())
+                    raise ValidationError({
+                        'status': f'Cannot transition from "{old_milestone.status}" to "{self.status}". Valid transitions: {valid_statuses}'
+                    })
 
     def __str__(self):
         return f'{self.transaction_id}: {self.name}'
+
+    def get_valid_next_statuses(self):
+        """Return the list of valid statuses this milestone can transition to."""
+        valid_transitions = {
+            'pending': ['in_progress', 'disputed'],
+            'in_progress': ['submitted', 'disputed'],
+            'submitted': ['under_review', 'disputed'],
+            'under_review': ['approved', 'changes_required', 'rejected', 'disputed'],
+            'changes_required': ['submitted', 'disputed'],
+            'approved': ['release_eligible', 'disputed'],
+            'release_eligible': ['paid', 'disputed'],
+            'paid': ['disputed'],
+            'rejected': ['disputed'],
+            'disputed': [],
+        }
+        return valid_transitions.get(self.status, [])
+
+    def can_transition_to(self, new_status):
+        """Check if this milestone can transition to the given status."""
+        return new_status in self.get_valid_next_statuses()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -703,6 +733,22 @@ class DocumentRequirement(models.Model):
 
     def __str__(self):
         return self.label
+
+    def can_be_archived(self):
+        """Check if this requirement can be archived (not in active use)."""
+        # Check if there are non-archived documents using this requirement
+        if self.documents.filter(status__in=('draft', 'submitted', 'under_review', 'verified', 'signed')).exists():
+            return False, "This requirement has active documents that must be archived first."
+        
+        # Check if this is linked to any active workflows
+        active_workflows = DocumentWorkflowRecord.objects.filter(
+            requirement=self,
+            status__in=('pending', 'in_progress', 'submitted', 'under_review')
+        )
+        if active_workflows.exists():
+            return False, "This requirement is in use by active workflows and cannot be archived."
+        
+        return True, ""
 
     def save(self, *args, **kwargs):
         if self.status == 'archived' and not self.archivedAt:

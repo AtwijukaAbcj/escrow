@@ -113,6 +113,32 @@ class RbacIntegrationTests(TestCase):
         requirement.record_history('status', 'draft', 'active', self.admin, 'Activated requirement')
         self.assertTrue(DocumentRequirementHistory.objects.filter(requirement=requirement).exists())
 
+    def test_document_requirement_cannot_be_archived_if_in_use(self):
+        requirement = DocumentRequirement.objects.create(
+            transactionType='rental',
+            key='tenancy-agreement',
+            label='Tenancy Agreement',
+            documentType='contract',
+            category='supporting',
+            stage='verification',
+            partyRole='seller',
+            required=True,
+            status='active',
+            isActive=True,
+        )
+        doc = Document.objects.create(
+            id='test-doc-1',
+            transaction=self.owned,
+            requirement=requirement,
+            name='Test Lease',
+            type='contract',
+            file='lease.pdf',
+            status='verified',
+        )
+        can_archive, message = requirement.can_be_archived()
+        self.assertFalse(can_archive)
+        self.assertIn('active documents', message)
+
     def test_document_requirement_can_be_archived(self):
         requirement = DocumentRequirement.objects.create(
             transactionType='rental',
@@ -137,6 +163,27 @@ class RbacIntegrationTests(TestCase):
         self.assertEqual(requirement.status, 'archived')
         self.assertIsNotNone(requirement.archivedAt)
         self.assertFalse(requirement.isActive)
+
+    def test_milestone_status_transitions_are_validated(self):
+        milestone = Milestone.objects.create(
+            transaction=self.owned,
+            name='First Delivery',
+            status='pending',
+        )
+        self.assertTrue(milestone.can_transition_to('in_progress'))
+        self.assertTrue(milestone.can_transition_to('disputed'))
+        self.assertFalse(milestone.can_transition_to('approved'))
+        self.assertFalse(milestone.can_transition_to('paid'))
+        
+        # Valid transition
+        milestone.status = 'in_progress'
+        milestone.save()
+        self.assertEqual(milestone.status, 'in_progress')
+        
+        # Invalid transition should raise ValidationError
+        milestone.status = 'pending'
+        with self.assertRaises(ValidationError):
+            milestone.save()
 
     def test_transactions_use_user_profiles_as_first_class_participants(self):
         self.assertEqual(self.owned.buyer, self.client_user.profile)
