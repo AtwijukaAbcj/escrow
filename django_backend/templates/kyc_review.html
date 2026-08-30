@@ -5,11 +5,11 @@
 {% block content %}
 <div class="tp-card tp-section">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
-        <div>
+        <div style="flex:1; min-width:0;">
             <h1 style="margin:0; font-size:1.45rem;">Review identity verification</h1>
             <p style="margin:8px 0 0; color:#5f6d7a;">{{ party.displayName }}{% if party.email %} · {{ party.email }}{% endif %}</p>
         </div>
-        <a class="tp-btn tp-btn--secondary" href="{% url 'kyc' %}">Back to queue</a>
+        <a class="tp-btn tp-btn--secondary" href="{% url 'kyc' %}" style="white-space:nowrap;">Back to queue</a>
     </div>
     {% if submission %}
     <div class="tp-form-grid">

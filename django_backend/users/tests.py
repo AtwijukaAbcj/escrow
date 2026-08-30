@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import PermissionDenied, ValidationError
 
-from escrow.models import Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentType, EscrowLedgerEntry, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
+from escrow.models import Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
 from escrow.views import PaymentForm
 
 from .models import AuditLog, Permission, Role, RolePermission, UserModuleAccess, UserRole
@@ -89,6 +89,54 @@ class RbacIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'owned-test')
         self.assertNotContains(response, 'other-test')
+
+    def test_authenticated_user_is_redirected_from_landing_page(self):
+        self.client.login(username='client-test', password='Pass12345!')
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('dashboard'))
+
+    def test_document_requirement_has_lifecycle_status_and_history(self):
+        requirement = DocumentRequirement.objects.create(
+            transactionType='sale',
+            key='proof-of-funds',
+            label='Proof of funds',
+            documentType='bank_statement',
+            category='supporting',
+            stage='funding',
+            partyRole='buyer',
+            required=True,
+            status='draft',
+        )
+        self.assertEqual(requirement.status, 'draft')
+        self.assertTrue(hasattr(requirement, 'createdAt'))
+        requirement.record_history('status', 'draft', 'active', self.admin, 'Activated requirement')
+        self.assertTrue(DocumentRequirementHistory.objects.filter(requirement=requirement).exists())
+
+    def test_document_requirement_can_be_archived(self):
+        requirement = DocumentRequirement.objects.create(
+            transactionType='rental',
+            key='tenancy-agreement',
+            label='Tenancy Agreement',
+            documentType='contract',
+            category='supporting',
+            stage='verification',
+            partyRole='seller',
+            required=True,
+            status='active',
+            isActive=True,
+        )
+        self.assertEqual(requirement.status, 'active')
+        self.assertIsNone(requirement.archivedAt)
+        requirement.status = 'archived'
+        requirement.archivedAt = timezone.now()
+        requirement.isActive = False
+        requirement.lastModifiedBy = self.admin
+        requirement.save()
+        requirement.refresh_from_db()
+        self.assertEqual(requirement.status, 'archived')
+        self.assertIsNotNone(requirement.archivedAt)
+        self.assertFalse(requirement.isActive)
 
     def test_transactions_use_user_profiles_as_first_class_participants(self):
         self.assertEqual(self.owned.buyer, self.client_user.profile)

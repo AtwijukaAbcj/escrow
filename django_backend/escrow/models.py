@@ -649,6 +649,12 @@ class VerifierRole(models.Model):
 
 
 class DocumentRequirement(models.Model):
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+        ('archived', 'Archived'),
+    ]
     STAGE_CHOICES = [
         ('transaction_setup', 'Transaction Setup'), ('buyer_acceptance', 'Buyer Acceptance'),
         ('seller_acceptance', 'Seller Acceptance'), ('contract_generation', 'Contract Generation'),
@@ -681,10 +687,15 @@ class DocumentRequirement(models.Model):
     requiredVerifierRole = models.CharField(max_length=64, blank=True)
     verifierRole = models.ForeignKey(VerifierRole, related_name='requirements', on_delete=models.SET_NULL, null=True, blank=True)
     isActive = models.BooleanField(default=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     displayOrder = models.PositiveIntegerField(default=0)
     instructions = models.TextField(blank=True)
     effectiveFrom = models.DateField(null=True, blank=True)
     ruleVersion = models.PositiveIntegerField(default=1)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+    lastModifiedBy = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_document_requirements')
+    archivedAt = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=('transactionType', 'key'), name='unique_document_requirement_type_key')]
@@ -692,6 +703,43 @@ class DocumentRequirement(models.Model):
 
     def __str__(self):
         return self.label
+
+    def save(self, *args, **kwargs):
+        if self.status == 'archived' and not self.archivedAt:
+            self.archivedAt = timezone.now()
+        elif self.status != 'archived' and self.archivedAt:
+            self.archivedAt = None
+        if self.status == 'inactive' and self.isActive:
+            self.isActive = False
+        elif self.status == 'active' and not self.isActive:
+            self.isActive = True
+        super().save(*args, **kwargs)
+
+    def record_history(self, field_name, old_value, new_value, changed_by=None, reason=''):
+        DocumentRequirementHistory.objects.create(
+            requirement=self,
+            field_name=field_name,
+            old_value=old_value,
+            new_value=new_value,
+            changed_by=changed_by,
+            reason=reason,
+        )
+
+
+class DocumentRequirementHistory(models.Model):
+    requirement = models.ForeignKey(DocumentRequirement, related_name='history', on_delete=models.CASCADE)
+    field_name = models.CharField(max_length=100)
+    old_value = models.TextField(blank=True, null=True)
+    new_value = models.TextField(blank=True, null=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='document_requirement_history')
+    reason = models.TextField(blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-changed_at',)
+
+    def __str__(self):
+        return f'{self.requirement.label}: {self.field_name}'
 
 
 class Document(models.Model):

@@ -1,28 +1,48 @@
 {% extends 'base.html' %}
 {% block title %}Transaction requirements | TrustPay Africa{% endblock %}
 {% block content %}
-<div class="tp-card tp-section">
-    <div style="display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start; margin-bottom:24px;">
-        <div><h1 style="margin:0; font-size:1.4rem;">Transaction document requirements</h1><p class="tp-muted">Configure categories and required documents by transaction type and workflow stage.</p></div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;"><a class="tp-btn tp-btn--secondary" href="{% url 'document-category-create' %}">Create category</a><a class="tp-btn" href="{% url 'document-requirement-create' %}">Create requirement</a></div>
+<div class="tp-card tp-section" style="padding:24px 24px 18px;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:18px; flex-wrap:wrap; margin-bottom:18px;">
+        <div style="flex:1; min-width:0;">
+            <div style="font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#7a8796;">Workspace / requirements</div>
+            <h1 style="margin:10px 0 0; font-size:1.85rem; line-height:1.2;">Transaction requirements</h1>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-left:auto;">
+            <div style="display:flex; align-items:center; min-width:260px; max-width:420px; width:100%; border:1px solid rgba(15,23,42,.12); border-radius:12px; background:#f8fafc; padding:0 12px; height:42px;">
+                <span style="color:#8a99ab; font-size:1rem;">⌕</span>
+                <input type="text" value="{{ search|default:'' }}" placeholder="Search requirement" style="border:0; outline:none; background:transparent; width:100%; padding:10px 8px; font:inherit; color:var(--brand-dark);">
+            </div>
+            <button class="tp-btn tp-btn--secondary" type="button">Filter</button>
+            <a class="tp-btn" href="{% url 'document-requirement-create' %}" style="white-space:nowrap;">+ New requirement</a>
+        </div>
     </div>
-    <form method="get" class="tp-requirements-filter">
+
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:8px 0 18px;">
+        <span style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; background:var(--brand-primary-soft); color:var(--brand-primary); font-weight:700; border:1px solid rgba(229,79,56,0.15);">All</span>
+        <span style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600;">Draft</span>
+        <span style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600;">Pending review</span>
+        <span style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600;">In progress</span>
+        <span style="display:inline-flex; align-items:center; padding:7px 12px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600;">Verified</span>
+    </div>
+
+    <form method="get" class="tp-requirements-filter" style="margin-bottom:18px; padding:14px; background:#f8fafc; border:1px solid var(--brand-line); border-radius:12px;">
         <label><span>Transaction type</span><select name="transaction_type"><option value="">All transaction types</option>{% for value, label in transaction_types %}<option value="{{ value }}"{% if selected_type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
         <label><span>Stage</span><select name="stage"><option value="">All stages</option>{% for value, label in stage_choices %}<option value="{{ value }}"{% if selected_stage == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
         <label><span>Category</span><select name="category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category.id }}"{% if selected_category == category.id|stringformat:'s' %} selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></label>
-        <label><span>Responsible party</span><select name="party_role"><option value="">All responsible parties</option>{% for value, label in party_role_choices %}<option value="{{ value }}"{% if selected_party == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <label><span>Requirement status</span><select name="required"><option value="">Required and optional</option><option value="yes"{% if selected_required == 'yes' %} selected{% endif %}>Required only</option><option value="no"{% if selected_required == 'no' %} selected{% endif %}>Optional only</option></select></label>
-        <label><span>Verification</span><select name="verification"><option value="">Any verification</option><option value="yes"{% if selected_verification == 'yes' %} selected{% endif %}>Verification required</option><option value="no"{% if selected_verification == 'no' %} selected{% endif %}>No verification</option></select></label>
-        <label><span>Active</span><select name="active"><option value="">All statuses</option><option value="yes"{% if selected_active == 'yes' %} selected{% endif %}>Active only</option><option value="no"{% if selected_active == 'no' %} selected{% endif %}>Inactive only</option></select></label>
-        <label><span>Search</span><input name="q" value="{{ search }}" placeholder="Requirement name"></label>
-        <div class="tp-requirements-filter__actions"><button class="tp-btn" type="submit">Filter</button>{% if selected_type or selected_stage or selected_category or selected_party or selected_required %}<a class="tp-btn tp-btn--secondary" href="{% url 'document-requirements' %}">Clear</a>{% endif %}</div>
+        <label><span>Responsible party</span><select name="party_role"><option value="">All parties</option>{% for value, label in party_role_choices %}<option value="{{ value }}"{% if selected_party == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label><span>Verification</span><select name="verification"><option value="">Any verification</option><option value="yes"{% if selected_verification == 'yes' %} selected{% endif %}>Required</option><option value="no"{% if selected_verification == 'no' %} selected{% endif %}>Optional</option></select></label>
+        <div class="tp-requirements-filter__actions" style="align-self:stretch;">
+            <button class="tp-btn" type="submit">Apply</button>
+            {% if selected_type or selected_stage or selected_category or selected_party or selected_required or selected_verification %}<a class="tp-btn tp-btn--secondary" href="{% url 'document-requirements' %}">Clear</a>{% endif %}
+        </div>
     </form>
-    <div class="tp-requirements-layout" style="display:grid; grid-template-columns:minmax(220px,.7fr) minmax(0,1.8fr); gap:24px; align-items:start;">
-        <aside style="border:1px solid var(--brand-line); border-radius:10px; padding:16px; background:#f8fafc;">
-            <h2 style="font-size:.78rem; color:#536579; text-transform:uppercase; letter-spacing:.08em; margin:0 0 14px;">Document tree</h2>
+
+    <div class="tp-requirements-layout" style="display:grid; grid-template-columns:minmax(220px,.72fr) minmax(0,1.9fr); gap:24px; align-items:start;">
+        <aside style="border:1px solid var(--brand-line); border-radius:12px; padding:16px; background:#f8fafc;">
+            <h2 style="font-size:.78rem; color:#536579; text-transform:uppercase; letter-spacing:.08em; margin:0 0 14px;">Browse requirements</h2>
             {% for category, transaction_groups in category_tree %}
             <details open style="margin-bottom:10px;">
-                <summary style="cursor:pointer; font-weight:800; color:#263548;">{{ category }}</summary>
+                <summary style="cursor:pointer; font-weight:800; color:#263548;">{{ category|cut:'_'|title }}</summary>
                 <div style="margin:8px 0 0 14px;">
                     {% for transaction_type, items in transaction_groups.items %}
                     <details style="margin:7px 0;">
@@ -36,9 +56,77 @@
             </details>
             {% empty %}<p class="tp-muted">No requirements configured.</p>{% endfor %}
         </aside>
+
         <section>
-            <h2 style="font-size:1.05rem; margin:0 0 12px;">All requirements</h2>
-            <table class="tp-table"><thead><tr><th>Document</th><th>Transaction type</th><th>Category</th><th>Stage</th><th>Responsible party</th><th>Required</th><th>Verification</th></tr></thead><tbody>{% for item in requirements %}<tr><td>{{ item.label }}{% if item.instructions %}<small style="display:block; color:#94a3b8;">{{ item.instructions }}</small>{% endif %}</td><td>{{ item.transactionType|default:'All types' }}</td><td>{{ item.categoryDefinition|default:item.category }}</td><td>{{ item.get_stage_display }}</td><td>{{ item.get_partyRole_display }}</td><td>{% if item.required %}Yes{% else %}Optional{% endif %}</td><td>{% if item.verificationRequired %}{{ item.requiredVerifierRole|default:'Required' }}{% else %}No{% endif %}</td></tr>{% empty %}<tr><td colspan="7">No requirements configured.</td></tr>{% endfor %}</tbody></table>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;">
+                <h2 style="font-size:1.05rem; margin:0;">Requirements · {{ requirements|length }}</h2>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="tp-btn tp-btn--secondary" type="button">Sort</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="tp-table">
+                    <thead>
+                        <tr>
+                            <th>Requirement</th>
+                            <th>Transaction type</th>
+                            <th>Stage</th>
+                            <th>Responsible party</th>
+                            <th>Verification</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in requirements %}
+                        <tr>
+                            <td>
+                                <div style="font-weight:800; color:var(--brand-dark);">{{ item.label }}</div>
+                                {% if item.instructions %}<div style="margin-top:5px; color:#64748b; font-size:.8rem; line-height:1.45;">{{ item.instructions }}</div>{% endif %}
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+                                    {% if item.required %}<span class="tp-badge tp-badge--success">Required</span>{% else %}<span class="tp-badge tp-badge--neutral">Optional</span>{% endif %}
+                                    {% if item.categoryDefinition or item.category %}<span class="tp-badge tp-badge--neutral">{{ item.categoryDefinition|default:item.category }}</span>{% endif %}
+                                </div>
+                            </td>
+                            <td>{{ item.transactionType|default:'All types' }}</td>
+                            <td>{{ item.get_stage_display }}</td>
+                            <td>{{ item.get_partyRole_display }}</td>
+                            <td>
+                                {% if item.verificationRequired %}
+                                    <span class="tp-badge tp-badge--warning">Verification required</span>
+                                {% else %}
+                                    <span class="tp-badge tp-badge--neutral">No verification</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center;">
+                                <details class="tp-row-menu">
+                                    <summary aria-label="Open row actions">⋮</summary>
+                                    <div class="tp-row-menu__panel">
+                                        <a href="{% url 'document-requirement-edit' item.id %}">Edit</a>
+                                        <form method="post" action="{% url 'document-requirement-duplicate' item.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit">Duplicate</button>
+                                        </form>
+                                        <form method="post" action="{% url 'document-requirement-toggle-active' item.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit">{% if item.isActive %}Deactivate{% else %}Activate{% endif %}</button>
+                                        </form>
+                                        {% if item.status != 'archived' %}
+                                        <form method="post" action="{% url 'document-requirement-delete' item.id %}" style="border-top:1px solid rgba(15,23,42,.08); margin-top:6px; padding-top:6px;">
+                                            {% csrf_token %}
+                                            <button type="submit" style="color:#dc2626;">Archive</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </details>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6">No requirements configured.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </section>
     </div>
 </div>

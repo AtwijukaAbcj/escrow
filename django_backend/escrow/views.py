@@ -66,6 +66,8 @@ def staff_required(view):
 
 
 def landing_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
     return render(request, 'landing.html')
 
 
@@ -740,6 +742,65 @@ def document_requirement_create_view(request):
         form.save()
         return redirect('document-requirements')
     return render(request, 'document_requirement_form.html', {'form': form, 'heading': 'Create document requirement', 'categories': DocumentCategory.objects.filter(isActive=True)})
+
+
+@login_required
+@permission_required('transactions.manage')
+def document_requirement_edit_view(request, requirement_id):
+    requirement = get_object_or_404(DocumentRequirement, pk=requirement_id)
+    form = DocumentRequirementForm(request.POST or None, instance=requirement)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        return redirect('document-requirements')
+    return render(request, 'document_requirement_form.html', {'form': form, 'heading': 'Edit document requirement', 'categories': DocumentCategory.objects.filter(isActive=True)})
+
+
+@login_required
+@permission_required('transactions.manage')
+def document_requirement_duplicate_view(request, requirement_id):
+    requirement = get_object_or_404(DocumentRequirement, pk=requirement_id)
+    if request.method == 'POST':
+        duplicate = DocumentRequirement.objects.get(pk=requirement_id)
+        duplicate.pk = None
+        duplicate.key = f"{requirement.key}-copy-{uuid4().hex[:8]}"
+        duplicate.label = f"{requirement.label} (Copy)"
+        duplicate.isActive = False
+        duplicate.status = 'draft'
+        duplicate.lastModifiedBy = request.user
+        duplicate.save()
+        duplicate.record_history('status', None, 'draft', request.user, f'Created as copy of requirement {requirement_id}')
+    return redirect('document-requirements')
+
+
+@login_required
+@permission_required('transactions.manage')
+def document_requirement_toggle_active_view(request, requirement_id):
+    requirement = get_object_or_404(DocumentRequirement, pk=requirement_id)
+    if request.method == 'POST':
+        old_status = requirement.status
+        requirement.isActive = not requirement.isActive
+        if requirement.isActive:
+            requirement.status = 'active'
+        else:
+            requirement.status = 'inactive'
+        requirement.lastModifiedBy = request.user
+        requirement.save(update_fields=['isActive', 'status', 'lastModifiedBy', 'updatedAt'])
+        requirement.record_history('status', old_status, requirement.status, request.user, f'Toggled to {"active" if requirement.isActive else "inactive"}')
+    return redirect('document-requirements')
+
+
+@login_required
+@permission_required('transactions.manage')
+def document_requirement_delete_view(request, requirement_id):
+    requirement = get_object_or_404(DocumentRequirement, pk=requirement_id)
+    if request.method == 'POST':
+        requirement.status = 'archived'
+        requirement.archivedAt = timezone.now()
+        requirement.lastModifiedBy = request.user
+        requirement.isActive = False
+        requirement.save(update_fields=['status', 'archivedAt', 'lastModifiedBy', 'isActive', 'updatedAt'])
+        requirement.record_history('status', 'active', 'archived', request.user, 'Requirement archived/deleted')
+    return redirect('document-requirements')
 
 
 @login_required
