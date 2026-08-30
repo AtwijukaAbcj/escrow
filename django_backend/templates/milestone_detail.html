@@ -1,8 +1,153 @@
 {% extends 'base.html' %}
 {% block title %}{{ milestone.name }} | TrustPay Africa{% endblock %}
 {% block content %}
-<section class="tp-card tp-section"><div class="tp-page-heading"><div><p class="tp-muted" style="margin:0 0 6px">{{ milestone.transaction.reference|default:milestone.transaction_id }}</p><h1>{{ milestone.name }}</h1><p>{{ milestone.description|default:'No description provided.' }}</p></div><a class="tp-btn tp-btn--secondary" href="{% url 'milestones' %}">Back to milestones</a></div>{% if is_overdue %}<span class="tp-badge tp-badge--danger">Overdue</span>{% endif %}<div class="tp-summary-grid" style="margin-top:20px"><div class="tp-stat"><span class="tp-stat__label">Amount</span><div class="tp-stat__value">{{ milestone.currency }} {{ milestone.amount }}</div></div><div class="tp-stat"><span class="tp-stat__label">Due date</span><div class="tp-stat__value" style="font-size:1.1rem">{{ milestone.dueDate|date:'d M Y'|default:'Not set' }}</div></div><div class="tp-stat"><span class="tp-stat__label">Status</span><div class="tp-stat__value" style="font-size:1.1rem">{{ milestone.get_status_display }}</div></div><div class="tp-stat"><span class="tp-stat__label">Release</span><div class="tp-stat__value" style="font-size:1.1rem">{{ milestone.releaseStatus|title }}</div></div></div></section>
-<section class="tp-card tp-section" style="margin-top:18px"><div class="tp-page-heading"><div><h2 style="margin:0">Next action</h2><p>{% if next_action %}{{ next_action|title }} is available for your role.{% else %}No action is currently required from you.{% endif %}</p></div>{% if next_action %}{% if next_action == 'milestone_request_changes' or next_action == 'milestone_reject' %}<form method="post" action="{% url 'milestone-action' milestone.pk next_action %}">{% csrf_token %}<div class="tp-field"><label for="reason">Reason</label><textarea id="reason" name="reason" required></textarea></div><button class="tp-btn" type="submit">{{ next_action|title }}</button></form>{% else %}<form method="post" action="{% url 'milestone-action' milestone.pk next_action %}">{% csrf_token %}<button class="tp-btn" type="submit">{{ next_action|title }}</button></form>{% endif %}{% endif %}</div></section>
-<div class="tp-split-form" style="margin-top:18px"><section class="tp-card tp-section"><h2 style="margin-top:0">Evidence checklist</h2><table class="tp-table"><thead><tr><th>Requirement</th><th>Responsible party</th><th>Stage</th><th>Status</th></tr></thead><tbody>{% for item in missing_documents %}<tr><td>{{ item.label }}</td><td>{{ item.party_role }}</td><td>{{ item.stage }}</td><td>{% if item.document %}{{ item.status }}{% else %}Missing{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No configured evidence requirements.</td></tr>{% endfor %}</tbody></table></section><section class="tp-card tp-section"><h2 style="margin-top:0">Verification &amp; approval</h2><dl><dt>Verifier role</dt><dd>{{ milestone.verifierRole|default:'Not assigned' }}</dd><dt>Assigned verifier</dt><dd>{{ milestone.assignedVerifier|default:'Not assigned' }}</dd><dt>Verification</dt><dd>{{ milestone.verificationComment|default:'Pending review' }}</dd><dt>Buyer decision</dt><dd>{{ milestone.buyerDecision|default:'Pending'|title }}</dd><dt>Release amount</dt><dd>{{ milestone.currency }} {{ milestone.releaseAmount }}</dd></dl></section></div>
-{% if can_submit and milestone.status == 'in_progress' %}<section class="tp-card tp-section" style="margin-top:18px"><h2 style="margin-top:0">Submit deliverable</h2><form method="post" action="{% url 'milestone-action' milestone.pk 'milestone_submit' %}">{% csrf_token %}<div class="tp-field"><label for="submit-note">Seller notes</label><textarea id="submit-note" name="reason" rows="3"></textarea></div><button class="tp-btn" type="submit">Submit for verification</button></form></section>{% endif %}
-+{% endblock %}
+
+<!-- Milestone Header Card -->
+<section class="tp-card tp-section" style="padding: 28px;">
+    <div class="tp-page-heading" style="margin-bottom: 0;">
+        <div style="flex: 1;">
+            <p class="tp-muted" style="margin: 0 0 10px; font-size: .9rem;">{{ milestone.transaction.reference|default:milestone.transaction_id }}</p>
+            <h1 style="margin: 0 0 12px; font-size: 1.75rem;">{{ milestone.name }}</h1>
+            <p style="margin: 0; color: #536579; line-height: 1.5;">{{ milestone.description|default:'No description provided.' }}</p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; justify-content: flex-end;">
+            {% if is_overdue %}<span class="tp-badge tp-badge--danger" style="white-space: nowrap;">Overdue</span>{% endif %}
+            <a class="tp-btn tp-btn--secondary" href="{% url 'milestones' %}" style="white-space: nowrap;">← Back to milestones</a>
+        </div>
+    </div>
+
+    <!-- Summary Grid -->
+    <div class="tp-summary-grid" style="margin-top: 28px; gap: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="tp-stat">
+            <span class="tp-stat__label" style="display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Amount</span>
+            <div class="tp-stat__value" style="font-size: 1.3rem; font-weight: 700; color: var(--brand-dark);">{{ milestone.currency }} {{ milestone.amount }}</div>
+        </div>
+        <div class="tp-stat">
+            <span class="tp-stat__label" style="display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Due date</span>
+            <div class="tp-stat__value" style="font-size: 1.3rem; font-weight: 700; color: var(--brand-dark);">{{ milestone.dueDate|date:'d M Y'|default:'Not set' }}</div>
+        </div>
+        <div class="tp-stat">
+            <span class="tp-stat__label" style="display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Status</span>
+            <div class="tp-stat__value" style="font-size: 1.3rem; font-weight: 700; color: var(--brand-dark);">{{ milestone.get_status_display }}</div>
+        </div>
+        <div class="tp-stat">
+            <span class="tp-stat__label" style="display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Release amount</span>
+            <div class="tp-stat__value" style="font-size: 1.3rem; font-weight: 700; color: var(--brand-dark);">{{ milestone.currency }} {{ milestone.releaseAmount }}</div>
+        </div>
+    </div>
+</section>
+
+<!-- Next Action Card -->
+<section class="tp-card tp-section" style="margin-top: 24px; padding: 28px;">
+    <h2 style="margin: 0 0 16px; font-size: 1.2rem;">Next action</h2>
+    <p style="margin: 0 0 20px; color: #536579;">
+        {% if next_action %}
+            {{ next_action|title }} is available for your role.
+        {% else %}
+            No action is currently required from you.
+        {% endif %}
+    </p>
+    
+    {% if next_action %}
+        {% if next_action == 'milestone_request_changes' or next_action == 'milestone_reject' %}
+            <form method="post" action="{% url 'milestone-action' milestone.pk next_action %}" style="max-width: 100%;">
+                {% csrf_token %}
+                <div class="tp-field" style="margin-bottom: 16px;">
+                    <label for="reason" style="display: block; margin-bottom: 10px; font-weight: 600;">Reason</label>
+                    <textarea id="reason" name="reason" required style="width: 100%; min-height: 100px; padding: 12px; border: 1px solid rgba(15,23,42,.12); border-radius: 10px; font-size: 1rem; font-family: inherit;"></textarea>
+                </div>
+                <button class="tp-btn" type="submit" style="margin-top: 8px;">{{ next_action|title }}</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'milestone-action' milestone.pk next_action %}">
+                {% csrf_token %}
+                <button class="tp-btn" type="submit">{{ next_action|title }}</button>
+            </form>
+        {% endif %}
+    {% endif %}
+</section>
+
+<!-- Two-Column Grid: Evidence & Verification -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+    
+    <!-- Evidence Checklist Card -->
+    <section class="tp-card tp-section" style="padding: 28px;">
+        <h2 style="margin: 0 0 20px; font-size: 1.2rem;">Evidence checklist</h2>
+        <div class="table-wrap" style="overflow-x: auto;">
+            <table class="tp-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="padding: 14px 12px; text-align: left;">Requirement</th>
+                        <th style="padding: 14px 12px; text-align: left;">Responsible party</th>
+                        <th style="padding: 14px 12px; text-align: left;">Stage</th>
+                        <th style="padding: 14px 12px; text-align: left;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in missing_documents %}
+                        <tr>
+                            <td style="padding: 14px 12px; border-top: 1px solid rgba(15,23,42,.08);">{{ item.label }}</td>
+                            <td style="padding: 14px 12px; border-top: 1px solid rgba(15,23,42,.08);">{{ item.party_role }}</td>
+                            <td style="padding: 14px 12px; border-top: 1px solid rgba(15,23,42,.08);">{{ item.stage }}</td>
+                            <td style="padding: 14px 12px; border-top: 1px solid rgba(15,23,42,.08);">
+                                {% if item.document %}
+                                    <span class="tp-badge tp-badge--success" style="font-size: .85rem;">{{ item.status }}</span>
+                                {% else %}
+                                    <span class="tp-badge tp-badge--warning" style="font-size: .85rem;">Missing</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="padding: 20px 12px; text-align: center; color: #8a99ab;">No configured evidence requirements.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Verification & Approval Card -->
+    <section class="tp-card tp-section" style="padding: 28px;">
+        <h2 style="margin: 0 0 20px; font-size: 1.2rem;">Verification & approval</h2>
+        <dl style="margin: 0;">
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(15,23,42,.08);">
+                <dt style="font-weight: 700; font-size: .85rem; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Verifier role</dt>
+                <dd style="margin: 0; font-size: 1rem; color: var(--brand-dark);">{{ milestone.verifierRole|default:'<span style="color: #8a99ab;">Not assigned</span>' }}</dd>
+            </div>
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(15,23,42,.08);">
+                <dt style="font-weight: 700; font-size: .85rem; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Assigned verifier</dt>
+                <dd style="margin: 0; font-size: 1rem; color: var(--brand-dark);">{{ milestone.assignedVerifier|default:'<span style="color: #8a99ab;">Not assigned</span>' }}</dd>
+            </div>
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(15,23,42,.08);">
+                <dt style="font-weight: 700; font-size: .85rem; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Verification status</dt>
+                <dd style="margin: 0; font-size: 1rem; color: var(--brand-dark);">{{ milestone.verificationComment|default:'<span style="color: #8a99ab;">Pending review</span>' }}</dd>
+            </div>
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(15,23,42,.08);">
+                <dt style="font-weight: 700; font-size: .85rem; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Buyer decision</dt>
+                <dd style="margin: 0; font-size: 1rem; color: var(--brand-dark);">{{ milestone.buyerDecision|default:'<span style="color: #8a99ab;">Pending</span>'|title }}</dd>
+            </div>
+            <div>
+                <dt style="font-weight: 700; font-size: .85rem; text-transform: uppercase; color: #7a8796; letter-spacing: .05em; margin-bottom: 8px;">Release status</dt>
+                <dd style="margin: 0; font-size: 1rem; color: var(--brand-dark);">{{ milestone.releaseStatus|default:'<span style="color: #8a99ab;">Not eligible</span>'|title }}</dd>
+            </div>
+        </dl>
+    </section>
+</div>
+
+<!-- Submit Deliverable Card (Conditional) -->
+{% if can_submit and milestone.status == 'in_progress' %}
+    <section class="tp-card tp-section" style="margin-top: 24px; padding: 28px;">
+        <h2 style="margin: 0 0 20px; font-size: 1.2rem;">Submit deliverable</h2>
+        <form method="post" action="{% url 'milestone-action' milestone.pk 'milestone_submit' %}" style="max-width: 100%;">
+            {% csrf_token %}
+            <div class="tp-field" style="margin-bottom: 16px;">
+                <label for="submit-note" style="display: block; margin-bottom: 10px; font-weight: 600;">Seller notes</label>
+                <textarea id="submit-note" name="reason" rows="4" style="width: 100%; padding: 12px; border: 1px solid rgba(15,23,42,.12); border-radius: 10px; font-size: 1rem; font-family: inherit;"></textarea>
+            </div>
+            <button class="tp-btn" type="submit" style="margin-top: 8px;">Submit for verification</button>
+        </form>
+    </section>
+{% endif %}
+
+{% endblock %}
