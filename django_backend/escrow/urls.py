@@ -47,6 +47,7 @@ urlpatterns = [
     path('payments/<int:payment_id>/review/', views.payment_decision_view, name='payment-review'),
     path('payments/ledger/', views.escrow_ledger_view, name='escrow-ledger'),
     path('payments/reconciliation/', views.reconciliation_view, name='payment-reconciliation'),
+    path('audit/', views.audit_console_view, name='audit-console'),
     path('payments/pesapal/', views.pesapal_settings_view, name='pesapal-settings'),
     path('settings/', views.settings_view, name='settings'),
     path('transactions/<str:transaction_id>/pay/pesapal/', views.pesapal_payment_view, name='pesapal-payment'),

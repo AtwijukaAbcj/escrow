@@ -40,9 +40,10 @@
             border-bottom: 1px solid var(--brand-line);
         }
         .tp-topbar__inner {
-            max-width: 1320px;
+            width: calc(100% - 18px);
+            max-width: none;
             margin: 0 auto;
-            padding: 12px 20px;
+            padding: 12px 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -149,7 +150,8 @@
         .tp-notification-item__time { display:block; margin-top:5px; color:#94a3b8; font-size:.7rem; }
         .tp-notification-empty { padding:18px 2px 4px; color:var(--brand-muted); font-size:.82rem; text-align:center; }
         .tp-container {
-            width: min(1320px, calc(100% - 32px));
+            width: calc(100% - 18px);
+            max-width: none;
             margin: 18px auto 42px;
         }
         .tp-card {
@@ -619,6 +621,7 @@
                         <div class="tp-menu">
                             {% if 'users.view' in user_permissions %}<a class="{% if request.path == '/users/' or request.path == '/users/new/' %}active{% endif %}" href="{% url 'users:list' %}">Users</a>{% endif %}
                             {% if 'roles.manage' in user_permissions %}<a class="{% if 'roles' in request.path %}active{% endif %}" href="{% url 'users:roles' %}">Roles &amp; permissions</a>{% endif %}
+                            {% if 'audit.view' in user_permissions %}<a class="{% if 'audit' in request.path %}active{% endif %}" href="{% url 'audit-console' %}">Audit trail</a>{% endif %}
                             {% if 'transactions.manage' in user_permissions %}
                             <details class="tp-menu-details"{% if 'transaction-documents' in request.path %} open{% endif %}>
                                 <summary class="{% if 'transaction-documents' in request.path %}active{% endif %}">Transaction requirements</summary>

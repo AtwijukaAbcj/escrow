@@ -56,3 +56,85 @@ class NotificationServiceTests(TestCase):
         self.assertTrue(notification.is_read)
         forbidden = self.client.post(reverse('users:notification-action', args=[Notification.objects.create(user=self.other_user, title='Private', message='Private').pk, 'read']))
         self.assertEqual(forbidden.status_code, 404)
+
+    def test_kyc_and_workflow_events_are_published_end_to_end(self):
+        """Test that KYC, transaction, and dispute events create notifications"""
+        from django.contrib.auth.models import User
+        from django.utils import timezone
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from escrow.models import EscrowLedgerEntry, KycSubmission, Milestone
+        from escrow.services import apply_action, apply_milestone_action, open_dispute
+        from users.models import Permission, Role, RolePermission, UserRole
+        
+        # Setup KYC test
+        staff_user = User.objects.create_user('notice-staff', password='Pass12345!')
+        user_role = Role.objects.create(name='Test KYC Review')
+        kyc_perm, _ = Permission.objects.get_or_create(code='kyc.approve', defaults={'name': 'Approve KYC', 'module': None})
+        RolePermission.objects.create(role=user_role, permission=kyc_perm)
+        UserRole.objects.create(user=staff_user, role=user_role)
+        
+        # Test KYC submission creates notification
+        kyc_initial_count = Notification.objects.filter(event_code='kyc.submitted').count()
+        kyc_sub = KycSubmission.objects.create(
+            party=self.buyer_user.profile.party,
+            applicantType='individual',
+            fullLegalName='Test User',
+            legalName='Test',
+            nationality='Test',
+            countryOfResidence='Test',
+            verificationStatus='verified',
+        )
+        # KYC submission publish (mimics form submission)
+        publish_event('kyc.submitted', recipients=[self.buyer_user])
+        self.assertEqual(Notification.objects.filter(event_code='kyc.submitted').count(), kyc_initial_count + 1)
+        
+        # Test transaction event creates notifications
+        milestone = Milestone.objects.create(transaction=self.transaction, name='Test', amount=10, currency='USD')
+        EscrowLedgerEntry.objects.create(transaction=self.transaction, entryType='credit', amount=100, currency='USD', reference='TEST', description='Test')
+        
+        # Apply transaction action (buyer accept)
+        apply_action(self.transaction.pk, self.buyer_user, 'buyer_accept')
+        notifications = Notification.objects.filter(event_code='transaction.buyer_accepted')
+        self.assertTrue(notifications.exists())
+        self.assertEqual(set(n.user_id for n in notifications), {self.seller_user.pk})
+        
+        # Test milestone event creates notifications
+        apply_milestone_action(milestone.pk, self.seller_user, 'milestone_submit')
+        milestone_notifications = Notification.objects.filter(event_code='milestone.submitted')
+        self.assertTrue(milestone_notifications.exists())
+        
+        # Test dispute event creates notifications
+        open_dispute(
+            self.transaction.pk, self.buyer_user, title='Test', category='quality_issue',
+            reason='Test dispute notification', amount=5, priority='high'
+        )
+        dispute_notifications = Notification.objects.filter(event_code='dispute.opened')
+        self.assertTrue(dispute_notifications.exists())
+        self.assertEqual(set(n.user_id for n in dispute_notifications), {self.seller_user.pk})
+        
+    def test_notification_dispatch_processes_pending_deliveries(self):
+        """Test that the dispatch task processes pending notifications"""
+        from users.models import NotificationDelivery
+        from users.notification_service import dispatch_delivery
+        
+        notification = Notification.objects.create(
+            user=self.buyer_user,
+            event_code='system.notice',
+            category='system',
+            title='Test dispatch',
+            message='Test message',
+            delivery_channels=['in_app']
+        )
+        delivery = NotificationDelivery.objects.create(
+            notification=notification,
+            channel='in_app',
+            status='pending'
+        )
+        self.assertEqual(delivery.status, 'pending')
+        
+        # Dispatch it
+        dispatch_delivery(delivery)
+        delivery.refresh_from_db()
+        self.assertEqual(delivery.status, 'delivered')
+        self.assertIsNotNone(delivery.delivered_at)
+

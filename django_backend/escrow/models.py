@@ -486,6 +486,19 @@ class DisputeResponse(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True)
 
 
+class DisputeEvidence(models.Model):
+    """Evidence/documents attached to disputes by parties or staff for review"""
+    dispute = models.ForeignKey(TransactionDispute, related_name='evidence', on_delete=models.CASCADE)
+    uploadedBy = models.ForeignKey(User, on_delete=models.PROTECT)
+    file = models.FileField(upload_to='dispute_evidence/%Y/%m/%d/')
+    documentType = models.CharField(max_length=100, help_text='e.g., invoice, receipt, photo, screenshot')
+    description = models.TextField(blank=True, help_text='Optional context about the evidence')
+    createdAt = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-createdAt']
+
+
 class DisputeSettlement(models.Model):
     STATUS_CHOICES = [('proposed', 'Proposed'), ('accepted', 'Accepted'), ('rejected', 'Rejected'), ('applied', 'Applied')]
     dispute = models.ForeignKey(TransactionDispute, related_name='settlements', on_delete=models.CASCADE)

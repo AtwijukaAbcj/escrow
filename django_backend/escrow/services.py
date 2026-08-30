@@ -33,6 +33,47 @@ def get_party_compliance_status(party):
     return party.complianceStatus or 'not_cleared'
 
 
+def sync_party_compliance_status(party, submission=None):
+    """Persist the party status fields so the compliance record matches KYC outcome."""
+    if not party:
+        return party
+    submission = submission or getattr(party, 'kyc_submission', None)
+    effective_status = getattr(party, 'complianceStatus', 'not_cleared')
+    if submission is not None:
+        verification_status = submission.verificationStatus
+        if verification_status == 'verified':
+            party.kycVerified = True
+            party.complianceStatus = 'cleared'
+            party.needsReverification = False
+            party.reverificationDueAt = None
+        elif verification_status in ('rejected', 'expired'):
+            party.kycVerified = False
+            party.complianceStatus = 'not_cleared'
+            party.needsReverification = False
+            party.reverificationDueAt = None
+        elif verification_status in ('submitted', 'under_review', 'additional_info_required', 'reverification_required', 'pending'):
+            party.kycVerified = False
+            party.complianceStatus = 'pending'
+            party.needsReverification = verification_status == 'reverification_required'
+            if not party.needsReverification:
+                party.reverificationDueAt = None
+        elif verification_status == 'suspended':
+            party.kycVerified = False
+            party.complianceStatus = 'suspended'
+            party.needsReverification = False
+            party.reverificationDueAt = None
+        else:
+            party.kycVerified = bool(party.kycVerified)
+            party.complianceStatus = effective_status or 'not_cleared'
+    else:
+        party.kycVerified = bool(party.kycVerified)
+        if party.complianceStatus not in ('restricted', 'suspended') and not party.kycVerified:
+            party.complianceStatus = 'not_cleared'
+    party.lastComplianceReviewAt = timezone.now()
+    party.save(update_fields=['kycVerified', 'complianceStatus', 'needsReverification', 'reverificationDueAt', 'lastComplianceReviewAt'])
+    return party
+
+
 def can_party_perform_action(party, action, transaction=None):
     """Check whether the participant may perform a protected action under explicit compliance restrictions.
 
@@ -746,3 +787,27 @@ def resolve_dispute(dispute_id, actor, *, resolution_type, notes, buyer_refund=0
     resolution.save(update_fields=['appliedAt'])
     _record_dispute_activity(dispute, actor, 'resolved', notes)
     return resolution
+
+
+@db_transaction.atomic
+def attach_dispute_evidence(dispute_id, actor, *, file, document_type, description=''):
+    """Attach evidence/document to a dispute for review"""
+    dispute = TransactionDispute.objects.select_for_update().get(pk=dispute_id)
+    txn = dispute.transaction
+    
+    # Allow participants to attach evidence, or staff with disputes.manage permission
+    participant = _dispute_participant_allowed(dispute, actor)
+    if not participant and not has_permission(actor, 'disputes.manage'):
+        raise PermissionDenied('Only dispute participants or staff can attach evidence.')
+    
+    if not document_type or not document_type.strip():
+        raise ValidationError('Document type is required.')
+    
+    from escrow.models import DisputeEvidence
+    evidence = DisputeEvidence.objects.create(
+        dispute=dispute, uploadedBy=actor, file=file,
+        documentType=document_type.strip(), description=description.strip()
+    )
+    
+    _record_dispute_activity(dispute, actor, 'evidence_attached', f'Evidence attached: {document_type}')
+    return evidence

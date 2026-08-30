@@ -59,7 +59,7 @@
 
         <section>
             <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
-                <h2 style="font-size:1.15rem; margin:0; font-weight:700;">Requirements · <span style="color:#8a99ab; font-weight:600;">{{ requirements|length }}</span></h2>
+                <h2 style="font-size:1.15rem; margin:0; font-weight:700;">Requirements · <span style="color:#8a99ab; font-weight:600;">{{ page_obj.paginator.count }}</span></h2>
                 <div style="display:flex; gap:8px; align-items:center;">
                     <button class="tp-btn tp-btn--secondary" type="button">Sort</button>
                 </div>
@@ -128,6 +128,29 @@
                     </tbody>
                 </table>
             </div>
+
+            {% if page_obj.has_other_pages %}
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:18px; flex-wrap:wrap; padding-top:18px; border-top:1px solid rgba(15,23,42,.08);">
+                <div style="color:#536579; font-size:.9rem;">
+                    Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    {% if page_obj.has_previous %}
+                        <a class="tp-btn tp-btn--secondary" href="?page={{ page_obj.previous_page_number }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}">Previous</a>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span style="display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px; border-radius:8px; background:var(--brand-primary-soft); color:var(--brand-primary); font-weight:700; border:1px solid rgba(229,79,56,0.15);">{{ num }}</span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}" style="display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px; border-radius:8px; border:1px solid rgba(15,23,42,.12); color:#263548; text-decoration:none; font-weight:600;">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <a class="tp-btn tp-btn--secondary" href="?page={{ page_obj.next_page_number }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </section>
     </div>
 </div>

@@ -1,4 +1,4 @@
-from .services import ACTION_RULES, apply_action, apply_dispute_action, apply_milestone_action, expire_overdue_transactions, open_dispute, resolve_dispute, resolve_document_requirements, verify_document
+from .services import ACTION_RULES, apply_action, apply_dispute_action, apply_milestone_action, expire_overdue_transactions, open_dispute, resolve_dispute, resolve_document_requirements, sync_party_compliance_status, verify_document
 from .models import Contract, Document, DocumentCategory, DocumentRequirement, DocumentType, DisputeResolution, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentInstruction, PaymentRecord, PesapalConfiguration, Transaction, TransactionDispute, UserProfile, VerificationHistory, VerifierRole
 from decimal import Decimal
 
@@ -421,14 +421,16 @@ def kyc_submit_view(request):
             submission.providerReference = result['reference']
             submission.verificationStatus = 'verified' if result['result'] == 'passed' else 'rejected'
             submission.save(update_fields=['verificationChecks', 'providerReference', 'verificationStatus'])
-            party.kycVerified = submission.verificationStatus == 'verified'
-            party.save(update_fields=['kycVerified'])
+            sync_party_compliance_status(party, submission)
             VerificationHistory.objects.create(
                 party=party,
                 action='verified' if party.kycVerified else 'rejected',
                 actor=str(request.user),
                 comment=f'Dummy identity provider reference: {submission.providerReference}',
             )
+            from django.db import transaction as db_transaction
+            event_code = 'kyc.verified' if party.kycVerified else 'kyc.rejected'
+            db_transaction.on_commit(lambda: publish_event(event_code, recipients=[party.user] if party.user else []))
             return redirect('dashboard')
     else:
         form = KycSubmissionForm(instance=submission)
@@ -471,14 +473,16 @@ def kyc_review_view(request, party_id):
         submission.verificationStatus = decision
         submission.verifiedAt = timezone.now()
         submission.save(update_fields=['verificationStatus', 'verifiedAt'])
-        party.kycVerified = decision == 'verified'
-        party.save(update_fields=['kycVerified'])
+        sync_party_compliance_status(party, submission)
         VerificationHistory.objects.create(
             party=party,
             action=decision,
             actor=str(request.user),
             comment=request.POST.get('comment', ''),
         )
+        from django.db import transaction as db_transaction
+        event_code = 'kyc.verified' if decision == 'verified' else 'kyc.rejected'
+        db_transaction.on_commit(lambda: publish_event(event_code, recipients=[party.user] if party.user else []))
         return redirect('kyc')
     return render(request, 'kyc_review.html', {'party': party, 'submission': submission})
 
@@ -660,7 +664,12 @@ def document_requirements_view(request):
         requirements_query = requirements_query.filter(isActive=selected_active == 'yes')
     if search:
         requirements_query = requirements_query.filter(models.Q(label__icontains=search) | models.Q(key__icontains=search))
-    requirements = list(requirements_query)
+
+    paginator = Paginator(requirements_query, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    requirements = list(page_obj.object_list)
+
     category_tree = {}
     for requirement in requirements:
         category_name = requirement.categoryDefinition.name if requirement.categoryDefinition else requirement.category
@@ -669,6 +678,8 @@ def document_requirements_view(request):
         ).append(requirement)
     return render(request, 'document_requirements.html', {
         'requirements': requirements,
+        'page_obj': page_obj,
+        'paginator': paginator,
         'categories': DocumentCategory.objects.filter(isActive=True),
         'category_tree': sorted(category_tree.items(), key=lambda item: item[0].lower()),
         'transaction_types': Transaction.TRANSACTION_TYPES,
@@ -983,9 +994,23 @@ def disputes_view(request):
 @login_required
 @dispute_screen_access
 def dispute_detail_view(request, dispute_id):
-    dispute = get_object_or_404(TransactionDispute.objects.select_related('transaction', 'milestone', 'payment', 'openedBy', 'opposingParty', 'assignedStaff').prefetch_related('responses', 'settlements', 'transaction__events'), transaction__in=visible_transactions(request.user), pk=dispute_id)
+    dispute = get_object_or_404(TransactionDispute.objects.select_related('transaction', 'milestone', 'payment', 'openedBy', 'opposingParty', 'assignedStaff').prefetch_related('responses', 'settlements', 'evidence', 'transaction__events'), transaction__in=visible_transactions(request.user), pk=dispute_id)
     if not is_staff_user(request.user) and request.user not in (dispute.openedBy, dispute.opposingParty):
         return HttpResponseForbidden('You are not a party to this dispute.')
+    
+    # Handle evidence upload
+    if request.method == 'POST' and 'evidence_file' in request.FILES:
+        try:
+            from escrow.services import attach_dispute_evidence
+            evidence_file = request.FILES['evidence_file']
+            doc_type = request.POST.get('document_type', '').strip()
+            description = request.POST.get('evidence_description', '').strip()
+            attach_dispute_evidence(dispute.pk, request.user, file=evidence_file, document_type=doc_type, description=description)
+            return redirect('dispute-detail', dispute_id=dispute_id)
+        except (PermissionDenied, ValidationError) as exc:
+            error = str(exc)
+            return render(request, 'dispute_detail.html', {'dispute': dispute, 'error': error, 'is_staff_view': is_staff_user(request.user)})
+    
     if dispute.status in ('open', 'awaiting_counterparty') and request.user == dispute.opposingParty:
         next_action = 'respond'
     elif is_staff_user(request.user) and dispute.status in ('open', 'awaiting_counterparty', 'under_review', 'evidence_required'):
@@ -1300,6 +1325,48 @@ def reconciliation_view(request):
             exceptions.append({'type': 'Financial totals exceed funding', 'reference': txn.reference or txn.id, 'detail': 'Released and refunded amounts exceed confirmed funding.'})
     return render(request, 'reconciliation.html', {'exceptions': exceptions, 'checked_payments': payments.count()})
 
+
+@login_required
+@permission_required('audit.view')
+@permission_required('audit.view')
+def audit_console_view(request):
+    from users.models import AuditLog
+    from django.core.paginator import Paginator
+    
+    logs = AuditLog.objects.select_related('actor').order_by('-created_at')
+    
+    action_filter = request.GET.get('action', '').strip()
+    target_filter = request.GET.get('target_type', '').strip()
+    actor_filter = request.GET.get('actor', '').strip()
+    
+    if action_filter:
+        logs = logs.filter(action__icontains=action_filter)
+    if target_filter:
+        logs = logs.filter(target_type=target_filter)
+    if actor_filter:
+        logs = logs.filter(actor__username__icontains=actor_filter)
+    
+    paginator = Paginator(logs, 50)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
+    action_types = sorted(set(logs.values_list('action', flat=True)))
+    target_types = sorted(set(logs.values_list('target_type', flat=True)))
+    actors = sorted(set(logs.filter(actor__isnull=False).values_list('actor__username', flat=True)))
+    
+    return render(request, 'audit_console.html', {
+        'page_obj': page_obj,
+        'action_types': action_types,
+        'target_types': target_types,
+        'actors': actors,
+        'action_filter': action_filter,
+        'target_filter': target_filter,
+        'actor_filter': actor_filter,
+        'total_logs': logs.count(),
+    })
+
+
+
 class PendingKycList(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1339,8 +1406,7 @@ def auto_verify(request, party_id):
     submission.providerReference = result['reference']
     submission.verificationStatus = 'verified' if result['result'] == 'passed' else 'rejected'
     submission.save(update_fields=['verificationChecks', 'providerReference', 'verificationStatus'])
-    party.kycVerified = submission.verificationStatus == 'verified'
-    party.save(update_fields=['kycVerified'])
+    sync_party_compliance_status(party, submission)
     return Response({
         'result': result['result'],
         'checks': result['checks'],
@@ -1354,8 +1420,12 @@ def verify_party(request, party_id):
         return Response({'detail': 'Permission required: kyc.approve.'}, status=status.HTTP_403_FORBIDDEN)
     party = get_object_or_404(Party, pk=party_id)
     comment = request.data.get('comment', '')
-    party.kycVerified = True
-    party.save()
+    submission = getattr(party, 'kyc_submission', None)
+    if submission:
+        submission.verificationStatus = 'verified'
+        submission.verifiedAt = timezone.now()
+        submission.save(update_fields=['verificationStatus', 'verifiedAt'])
+    sync_party_compliance_status(party, submission)
     vh = VerificationHistory.objects.create(party=party, action='verified', actor=str(request.user), comment=comment)
     return Response(PartySerializer(party).data)
 
@@ -1366,8 +1436,12 @@ def unverify_party(request, party_id):
         return Response({'detail': 'Permission required: kyc.approve.'}, status=status.HTTP_403_FORBIDDEN)
     party = get_object_or_404(Party, pk=party_id)
     comment = request.data.get('comment', '')
-    party.kycVerified = False
-    party.save()
+    submission = getattr(party, 'kyc_submission', None)
+    if submission:
+        submission.verificationStatus = 'rejected'
+        submission.verifiedAt = None
+        submission.save(update_fields=['verificationStatus', 'verifiedAt'])
+    sync_party_compliance_status(party, submission)
     vh = VerificationHistory.objects.create(party=party, action='unverified', actor=str(request.user), comment=comment)
     return Response(PartySerializer(party).data)
 

@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import PermissionDenied, ValidationError
 
-from escrow.models import Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
+from escrow.models import Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
 from escrow.views import PaymentForm
 
 from .models import AuditLog, Permission, Role, RolePermission, UserModuleAccess, UserRole
@@ -96,6 +96,24 @@ class RbacIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('dashboard'))
 
+    def test_kyc_review_updates_party_compliance_state(self):
+        party = Party.objects.create(id='kyc-review-party', displayName='KYC Review Party', role='buyer')
+        KycSubmission.objects.create(
+            party=party,
+            applicantType='individual',
+            fullLegalName='KYC Review Party',
+            email='kyc-review@example.com',
+            verificationStatus='submitted',
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('kyc-review', args=[party.id]), {'decision': 'verified', 'comment': 'Identity verified'})
+
+        self.assertEqual(response.status_code, 302)
+        party.refresh_from_db()
+        self.assertTrue(party.kycVerified)
+        self.assertEqual(party.complianceStatus, 'cleared')
+
     def test_document_requirement_has_lifecycle_status_and_history(self):
         requirement = DocumentRequirement.objects.create(
             transactionType='sale',
@@ -112,6 +130,30 @@ class RbacIntegrationTests(TestCase):
         self.assertTrue(hasattr(requirement, 'createdAt'))
         requirement.record_history('status', 'draft', 'active', self.admin, 'Activated requirement')
         self.assertTrue(DocumentRequirementHistory.objects.filter(requirement=requirement).exists())
+
+    def test_document_requirements_are_paginated(self):
+        self.client.force_login(self.admin)
+        for index in range(25):
+            DocumentRequirement.objects.create(
+                transactionType='sale',
+                key=f'requirement-{index}',
+                label=f'Requirement {index}',
+                documentType='bank_statement',
+                category='supporting',
+                stage='funding',
+                partyRole='buyer',
+                required=True,
+                status='draft',
+                isActive=True,
+            )
+
+        response = self.client.get(reverse('document-requirements'), {'page': 2})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['page_obj'].number, 2)
+        self.assertEqual(response.context['page_obj'].paginator.per_page, 20)
+        self.assertTrue(response.context['page_obj'].has_next())
+        self.assertNotContains(response, 'Requirement 0')
+        self.assertContains(response, 'Requirement 20')
 
     def test_document_requirement_cannot_be_archived_if_in_use(self):
         requirement = DocumentRequirement.objects.create(
@@ -377,6 +419,131 @@ class RbacIntegrationTests(TestCase):
         self.assertEqual(resolution.buyerRefundAmount, 4)
         self.assertEqual(resolution.sellerReleaseAmount, 6)
         self.assertEqual(EscrowLedgerEntry.objects.filter(transaction=self.owned, entryType='debit').count(), 2)
+
+    def test_staff_can_view_audit_trail_of_dispute_actions(self):
+        EscrowLedgerEntry.objects.create(transaction=self.owned, entryType='credit', amount=5, currency='USD', reference='AUDIT-FUND', description='Funding')
+        dispute = open_dispute(
+            self.owned.id, self.client_user, title='Audit test dispute', category='quality_issue',
+            reason='Test dispute for audit trail.', amount=3, priority='high'
+        )
+        self.owned.refresh_from_db()
+        self.assertEqual(self.owned.status, 'disputed')
+        audit_entries = AuditLog.objects.filter(action__startswith='dispute.', target_type='dispute', target_id=str(dispute.pk))
+        self.assertTrue(audit_entries.exists())
+        self.assertTrue(any('opened' in e.action for e in audit_entries))
+
+    def test_audit_console_requires_permission_and_displays_filtered_logs(self):
+        # Create audit permission and assign to privileged role
+        audit_permission, _ = Permission.objects.get_or_create(
+            code='audit.view',
+            defaults={'name': 'View audit trail', 'module': 'audit'}
+        )
+        self.privileged.permissions.add(audit_permission)
+        
+        # Create some audit log entries
+        AuditLog.objects.create(
+            actor=self.client_user, action='dispute.opened', target_type='dispute', target_id='1',
+            details={'title': 'Test dispute', 'amount': 100}
+        )
+        AuditLog.objects.create(
+            actor=self.provider_user, action='transaction.created', target_type='transaction', target_id='owned-test',
+            details={'description': 'Test transaction'}
+        )
+        
+        # Test: non-staff user cannot access audit console
+        self.client.login(username='client-test', password='Pass12345!')
+        response = self.client.get('/audit/')
+        self.assertEqual(response.status_code, 403)
+        
+        # Test: staff without permission cannot access
+        self.client.logout()
+        staff_no_perm = User.objects.create_user('staff-no-perm', password='Pass12345!')
+        UserRole.objects.create(user=staff_no_perm, role=self.manager)  # manager role, but no audit permission
+        self.client.login(username='staff-no-perm', password='Pass12345!')
+        response = self.client.get('/audit/')
+        self.assertEqual(response.status_code, 403)
+        
+        # Test: staff with audit.view permission can access
+        self.client.logout()
+        staff_with_perm = User.objects.create_user('staff-with-perm', password='Pass12345!')
+        UserRole.objects.create(user=staff_with_perm, role=self.privileged)
+        # Add module access for audit
+        audit_module = audit_permission.module
+        UserModuleAccess.objects.get_or_create(user=staff_with_perm, module=audit_module)
+        self.client.login(username='staff-with-perm', password='Pass12345!')
+        response = self.client.get('/audit/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Admin Audit Console')
+        self.assertContains(response, 'dispute.opened')
+        self.assertContains(response, 'transaction.created')
+        
+        # Test: filtering by action
+        response = self.client.get('/audit/?action=dispute.opened')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'dispute.opened')
+        self.assertNotContains(response, 'transaction.created')
+        
+        # Test: filtering by target_type
+        response = self.client.get('/audit/?target_type=transaction')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'transaction.created')
+        self.assertNotContains(response, 'dispute.opened')
+        
+        # Test: filtering by actor
+        response = self.client.get('/audit/?actor={}'.format(self.provider_user.username))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'transaction.created')
+
+    def test_dispute_evidence_attachment(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from escrow.models import DisputeEvidence
+        from escrow.services import attach_dispute_evidence, open_dispute
+        
+        # Set up: Create and fund transaction with dispute
+        EscrowLedgerEntry.objects.create(transaction=self.owned, entryType='credit', amount=10, currency='USD', reference='TEST-FUND', description='Testing')
+        dispute = open_dispute(
+            self.owned.id, self.client_user, title='Evidence test', category='quality_issue',
+            reason='Testing evidence attachment', amount=5, priority='normal'
+        )
+        
+        # Test: Participant can attach evidence
+        evidence_file = SimpleUploadedFile('test_receipt.pdf', b'PDF content', content_type='application/pdf')
+        evidence = attach_dispute_evidence(
+            dispute.pk, self.client_user, file=evidence_file, document_type='Receipt',
+            description='Proof of payment'
+        )
+        self.assertIsNotNone(evidence.pk)
+        self.assertEqual(evidence.documentType, 'Receipt')
+        self.assertEqual(evidence.uploadedBy, self.client_user)
+        self.assertEqual(evidence.dispute, dispute)
+        
+        # Test: Evidence is recorded in audit log
+        audit_entries = AuditLog.objects.filter(
+            action='dispute.evidence_attached', target_type='dispute', target_id=str(dispute.pk)
+        )
+        self.assertTrue(audit_entries.exists())
+        
+        # Test: Staff can attach evidence
+        staff_file = SimpleUploadedFile('staff_inspection.jpg', b'JPEG content', content_type='image/jpeg')
+        staff_evidence = attach_dispute_evidence(
+            dispute.pk, self.admin, file=staff_file, document_type='Inspection Report',
+            description='Staff inspection results'
+        )
+        self.assertEqual(staff_evidence.uploadedBy, self.admin)
+        
+        # Test: Can retrieve all evidence for dispute
+        all_evidence = DisputeEvidence.objects.filter(dispute=dispute)
+        self.assertEqual(all_evidence.count(), 2)
+        self.assertTrue(all_evidence.filter(documentType='Receipt').exists())
+        self.assertTrue(all_evidence.filter(documentType='Inspection Report').exists())
+        
+        # Test: Non-participant cannot attach evidence
+        from django.core.exceptions import PermissionDenied
+        other_file = SimpleUploadedFile('other.pdf', b'PDF', content_type='application/pdf')
+        with self.assertRaises(PermissionDenied):
+            attach_dispute_evidence(
+                dispute.pk, self.other_user, file=other_file, document_type='Evidence', description=''
+            )
 
     def test_document_requirements_resolve_by_transaction_stage_and_milestone(self):
         category = DocumentCategory.objects.create(code='test-delivery', name='Test Delivery')
