@@ -1,20 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Settings | TrustPay Africa{% endblock %}
 {% block content %}
-<style>
-    .tp-settings-layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:20px; align-items:start; }
-    .tp-settings-nav { padding:10px; position:sticky; top:92px; }
-    .tp-settings-nav a { display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:10px; color:var(--brand-dark); text-decoration:none; font-weight:700; }
-    .tp-settings-nav a:hover, .tp-settings-nav a.active { color:var(--brand-primary); background:var(--brand-primary-soft); }
-    .tp-settings-nav svg, .tp-settings-heading svg, .tp-settings-actions svg { width:18px; height:18px; flex:0 0 auto; }
-    .tp-settings-content { display:grid; gap:16px; }
-    .tp-settings-heading, .tp-settings-row { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
-    .tp-settings-heading h2 { margin:0; font-size:1.1rem; }
-    .tp-settings-heading p { margin:6px 0 0; }
-    .tp-settings-checks { display:grid; gap:12px; }
-    .tp-settings-actions { display:flex; justify-content:flex-end; }
-    @media (max-width:760px) { .tp-settings-layout { grid-template-columns:1fr; } .tp-settings-nav { position:static; display:flex; overflow-x:auto; gap:4px; } .tp-settings-nav a { white-space:nowrap; } }
-</style>
+
 <div class="tp-page-heading"><div><p class="tp-eyebrow">Workspace configuration</p><h1>Settings</h1><p>Manage your account, notifications, workflow preferences, and payment connections.</p></div></div>
 <form method="post">
     {% csrf_token %}

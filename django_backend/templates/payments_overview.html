@@ -1,29 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Payments & Escrow | TrustPay Africa{% endblock %}
 {% block content %}
-<style>
-    .payments-filter {
-        display: grid;
-        grid-template-columns: minmax(190px, 1.3fr) minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, .8fr) auto;
-        gap: 14px;
-        align-items: end;
-        margin-bottom: 22px;
-        padding: 18px;
-        background: #f8fafc;
-        border: 1px solid var(--brand-line);
-        border-radius: 14px;
-    }
-    .payments-filter label { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-    .payments-filter label span { color: #536579; font-size: .71rem; font-weight: 800; letter-spacing: .06em; line-height: 1.25; text-transform: uppercase; }
-    .payments-filter input,
-    .payments-filter select { width: 100%; min-width: 0; height: 44px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; padding: 0 12px; color: var(--brand-dark); font: inherit; outline: none; transition: border-color .2s ease, box-shadow .2s ease; }
-    .payments-filter input:focus,
-    .payments-filter select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(229,79,56,.12); }
-    .payments-filter__actions { display: flex; gap: 8px; height: 44px; }
-    .payments-filter__actions .tp-btn { min-width: 82px; height: 44px; box-sizing: border-box; padding: 0 16px; }
-    @media (max-width: 900px) { .payments-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); } .payments-filter__actions { grid-column: 1 / -1; justify-content: flex-start; } }
-    @media (max-width: 560px) { .payments-filter { grid-template-columns: 1fr; padding: 15px; } .payments-filter__actions { grid-column: auto; } .payments-filter__actions .tp-btn { flex: 1; } }
-</style>
+
 <div class="tp-page-heading"><div><h1>Payments &amp; Escrow</h1><p>Financial activity for transactions visible to your account.</p></div>{% if 'payments.manage' in user_permissions %}<a class="tp-btn tp-btn--secondary" href="{% url 'pesapal-settings' %}">Pesapal settings</a>{% endif %}</div>
 <div class="tp-summary-grid">
     <div class="tp-stat tp-card"><span class="tp-stat__label">Pending payments</span><div class="tp-stat__value">{{ summary.pending_payments }}</div></div>

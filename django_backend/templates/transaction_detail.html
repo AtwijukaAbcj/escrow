@@ -3,45 +3,6 @@
 {% block title %}{{ transaction.reference|default:transaction.id }} | TrustPay Africa{% endblock %}
 
 {% block content %}
-<style>
-    .transaction-workspace { display: grid; gap: 18px; }
-    .transaction-header { display:flex; justify-content:space-between; gap:24px; align-items:flex-start; flex-wrap:wrap; }
-    .transaction-eyebrow { color:var(--brand-primary); font-size:.74rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-    .transaction-header h1 { margin:6px 0 8px; font-size:1.7rem; }
-    .transaction-meta { display:flex; flex-wrap:wrap; gap:8px 18px; color:var(--brand-muted); font-size:.88rem; }
-    .transaction-meta strong { color:var(--brand-dark); }
-    .transaction-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
-    .transaction-summary__item { padding:16px; border:1px solid var(--brand-line); border-radius:12px; background:linear-gradient(180deg,#fff,#f8fafc); }
-    .transaction-summary__label { display:block; color:var(--brand-muted); font-size:.7rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
-    .transaction-summary__value { display:block; margin-top:8px; font-size:1.22rem; font-weight:800; }
-    .workspace-panel { padding:22px; }
-    .workspace-panel h2 { margin:0; font-size:1.08rem; }
-    .workspace-panel__heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
-    .current-action { border-left:4px solid var(--brand-primary); background:var(--brand-primary-soft); }
-    .current-action p { margin:6px 0 16px; color:var(--brand-muted); }
-    .workspace-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr); gap:18px; }
-    .detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 22px; }
-    .detail-item dt { color:var(--brand-muted); font-size:.74rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
-    .detail-item dd { margin:5px 0 0; color:var(--brand-dark); }
-    .workflow { display:grid; gap:0; }
-    .workflow-step { display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:12px; align-items:center; padding:13px 0; border-bottom:1px solid var(--brand-line); }
-    .workflow-step:last-child { border-bottom:0; }
-    .workflow-step__marker { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:#e2e8f0; color:#64748b; font-size:.78rem; font-weight:800; }
-    .workflow-step--complete .workflow-step__marker { background:var(--brand-success); color:#fff; }
-    .workflow-step--current .workflow-step__marker { background:var(--brand-primary); color:#fff; }
-    .workflow-step__label { font-weight:600; }
-    .workflow-step--current .workflow-step__label { font-weight:800; }
-    .workflow-step__meta { display:block; margin-top:3px; color:var(--brand-muted); font-size:.78rem; }
-    .section-note { margin:5px 0 0; color:var(--brand-muted); font-size:.88rem; }
-    .table-wrap { overflow-x:auto; }
-    .table-wrap .tp-table { min-width:620px; }
-    .activity-label { font-weight:700; }
-    .activity-code { display:block; margin-top:3px; color:var(--brand-muted); font-family:monospace; font-size:.76rem; }
-    .control-stack { display:flex; flex-wrap:wrap; gap:10px; }
-    .control-stack form { margin:0; }
-    @media (max-width:900px) { .transaction-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .workspace-grid { grid-template-columns:1fr; } }
-    @media (max-width:560px) { .transaction-summary,.detail-grid { grid-template-columns:1fr; } .workspace-panel { padding:18px; } .transaction-header h1 { font-size:1.4rem; } .workflow-step { grid-template-columns:30px minmax(0,1fr); } .workflow-step .tp-badge { grid-column:2; justify-self:start; } }
-</style>
 
 <div class="transaction-workspace">
     <section class="tp-card workspace-panel">

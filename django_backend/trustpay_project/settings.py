@@ -1,9 +1,9 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
-SOLICH_STATIC = PROJECT_ROOT.parent / 'SolichHRMS' / 'hrms' / 'static'
 
 SECRET_KEY = 'dev-secret'
 DEBUG = True
@@ -33,6 +33,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'trustpay_project.urls'
+
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
@@ -70,14 +71,25 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# ============================================================
+# STATIC FILES
+# ============================================================
+
 STATIC_URL = '/static/'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
-    SOLICH_STATIC,
 ]
+
+# ============================================================
+# MEDIA FILES
+# ============================================================
+
 MEDIA_URL = '/media/'
-# point to existing backend uploads folder so files are reused
-MEDIA_ROOT = os.path.join(BASE_DIR.parent, 'backend', 'data', 'uploads')
+
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -90,7 +102,6 @@ REST_FRAMEWORK = {
     ),
 }
 
-from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
