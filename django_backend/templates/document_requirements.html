@@ -1,157 +1,430 @@
 {% extends 'base.html' %}
 {% block title %}Transaction requirements | TrustPay Africa{% endblock %}
+
 {% block content %}
-<div class="tp-card tp-section" style="padding: 28px;">
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:24px;">
-        <div style="flex:1; min-width:0;">
-            <div style="font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#7a8796;">Workspace / requirements</div>
-            <h1 style="margin:12px 0 0; font-size:1.85rem; line-height:1.2; font-weight:700;">Transaction requirements</h1>
-        </div>
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-left:auto;">
-            <div style="display:flex; align-items:center; min-width:280px; max-width:420px; width:100%; border:1px solid rgba(15,23,42,.12); border-radius:12px; background:#f8fafc; padding:0 12px; height:44px;">
-                <span style="color:#8a99ab; font-size:1rem;">⌕</span>
-                <input type="text" value="{{ search|default:'' }}" placeholder="Search requirement" style="border:0; outline:none; background:transparent; width:100%; padding:12px 8px; font:inherit; color:var(--brand-dark); font-size: .95rem;">
+
+<div class="req-workspace">
+
+    <!-- Header -->
+    <header class="req-header">
+        <div class="req-header__copy">
+            <div class="req-eyebrow">
+                <i data-lucide="file-check-2" aria-hidden="true"></i>
+                <span>Workspace / Requirements</span>
             </div>
-            <button class="tp-btn tp-btn--secondary" type="button">Filter</button>
-            <a class="tp-btn" href="{% url 'document-requirement-create' %}" style="white-space:nowrap;">+ New requirement</a>
+
+            <h1 class="req-title">Transaction requirements</h1>
+            <p class="req-subtitle">
+                Configure the documents, evidence and verification requirements that apply across TrustPay transaction workflows.
+            </p>
         </div>
-    </div>
 
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:12px 0 24px; padding-bottom: 12px; border-bottom: 1px solid rgba(15,23,42,.08);">
-        <span style="display:inline-flex; align-items:center; padding:8px 14px; border-radius:999px; background:var(--brand-primary-soft); color:var(--brand-primary); font-weight:700; border:1px solid rgba(229,79,56,0.15); font-size: .85rem;">All</span>
-        <span style="display:inline-flex; align-items:center; padding:8px 14px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600; font-size: .85rem;">Draft</span>
-        <span style="display:inline-flex; align-items:center; padding:8px 14px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600; font-size: .85rem;">Pending review</span>
-        <span style="display:inline-flex; align-items:center; padding:8px 14px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600; font-size: .85rem;">In progress</span>
-        <span style="display:inline-flex; align-items:center; padding:8px 14px; border-radius:999px; background:#f3f4f6; color:#52647b; font-weight:600; font-size: .85rem;">Verified</span>
-    </div>
+        <div class="req-header__actions">
+            <form method="get" class="req-search">
+                <i data-lucide="search" aria-hidden="true"></i>
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search|default:'' }}"
+                    placeholder="Search requirements"
+                    aria-label="Search requirements"
+                >
 
-    <form method="get" class="tp-requirements-filter" style="margin-bottom: 24px; padding: 18px; background: #f8fafc; border: 1px solid var(--brand-line); border-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: end;">
-        <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 600; font-size: .9rem; color: #536579;">Transaction type</span><select name="transaction_type" style="padding: 10px; border: 1px solid rgba(15,23,42,.12); border-radius: 8px; font-size: .9rem;"><option value="">All transaction types</option>{% for value, label in transaction_types %}<option value="{{ value }}"{% if selected_type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 600; font-size: .9rem; color: #536579;">Stage</span><select name="stage" style="padding: 10px; border: 1px solid rgba(15,23,42,.12); border-radius: 8px; font-size: .9rem;"><option value="">All stages</option>{% for value, label in stage_choices %}<option value="{{ value }}"{% if selected_stage == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 600; font-size: .9rem; color: #536579;">Category</span><select name="category" style="padding: 10px; border: 1px solid rgba(15,23,42,.12); border-radius: 8px; font-size: .9rem;"><option value="">All categories</option>{% for category in categories %}<option value="{{ category.id }}"{% if selected_category == category.id|stringformat:'s' %} selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></label>
-        <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 600; font-size: .9rem; color: #536579;">Responsible party</span><select name="party_role" style="padding: 10px; border: 1px solid rgba(15,23,42,.12); border-radius: 8px; font-size: .9rem;"><option value="">All parties</option>{% for value, label in party_role_choices %}<option value="{{ value }}"{% if selected_party == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <label style="display: flex; flex-direction: column; gap: 6px;"><span style="font-weight: 600; font-size: .9rem; color: #536579;">Verification</span><select name="verification" style="padding: 10px; border: 1px solid rgba(15,23,42,.12); border-radius: 8px; font-size: .9rem;"><option value="">Any verification</option><option value="yes"{% if selected_verification == 'yes' %} selected{% endif %}>Required</option><option value="no"{% if selected_verification == 'no' %} selected{% endif %}>Optional</option></select></label>
-        <div style="display: flex; gap: 8px; align-items: flex-end;">
-            <button class="tp-btn" type="submit">Apply</button>
-            {% if selected_type or selected_stage or selected_category or selected_party or selected_required or selected_verification %}<a class="tp-btn tp-btn--secondary" href="{% url 'document-requirements' %}">Clear</a>{% endif %}
+                {% if selected_type %}<input type="hidden" name="transaction_type" value="{{ selected_type }}">{% endif %}
+                {% if selected_stage %}<input type="hidden" name="stage" value="{{ selected_stage }}">{% endif %}
+                {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                {% if selected_party %}<input type="hidden" name="party_role" value="{{ selected_party }}">{% endif %}
+                {% if selected_verification %}<input type="hidden" name="verification" value="{{ selected_verification }}">{% endif %}
+            </form>
+
+            <a class="tp-btn req-new-button" href="{% url 'document-requirement-create' %}">
+                <i data-lucide="plus" aria-hidden="true"></i>
+                New requirement
+            </a>
         </div>
-    </form>
+    </header>
 
-    <div class="tp-requirements-layout" style="display:grid; grid-template-columns:minmax(240px,.72fr) minmax(0,1.9fr); gap:28px; align-items:start;">
-        <aside style="border:1px solid var(--brand-line); border-radius:12px; padding:20px; background:#f8fafc; height: fit-content; position: sticky; top: 20px;">
-            <h2 style="font-size:.75rem; color:#536579; text-transform:uppercase; letter-spacing:.06em; margin:0 0 16px; font-weight:700;">Browse requirements</h2>
+    <!-- Useful summary -->
+    <section class="req-summary" aria-label="Requirements summary">
+        <div class="req-summary__item">
+            <div class="req-summary__icon">
+                <i data-lucide="clipboard-list" aria-hidden="true"></i>
+            </div>
+            <div>
+                <div class="req-summary__value">{{ page_obj.paginator.count }}</div>
+                <div class="req-summary__label">Configured requirements</div>
+            </div>
+        </div>
+
+        <div class="req-summary__item">
+            <div class="req-summary__icon">
+                <i data-lucide="folder-tree" aria-hidden="true"></i>
+            </div>
+            <div>
+                <div class="req-summary__value">{{ categories|length }}</div>
+                <div class="req-summary__label">Document categories</div>
+            </div>
+        </div>
+
+        <div class="req-summary__item">
+            <div class="req-summary__icon">
+                <i data-lucide="workflow" aria-hidden="true"></i>
+            </div>
+            <div>
+                <div class="req-summary__value">{{ transaction_types|length }}</div>
+                <div class="req-summary__label">Transaction types</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="req-filter-card">
+        <div class="req-filter-card__top">
+            <div class="req-filter-card__title">
+                <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+                Filter requirements
+            </div>
+
+            {% if selected_type or selected_stage or selected_category or selected_party or selected_required or selected_verification or search %}
+            <a href="{% url 'document-requirements' %}" class="tp-muted" style="text-decoration:none; font-size:.75rem; font-weight:700;">
+                Clear all
+            </a>
+            {% endif %}
+        </div>
+
+        <form method="get" class="req-filter-form">
+            {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+
+            <label class="req-filter-field">
+                <span>Transaction type</span>
+                <select name="transaction_type">
+                    <option value="">All transaction types</option>
+                    {% for value, label in transaction_types %}
+                    <option value="{{ value }}"{% if selected_type == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label class="req-filter-field">
+                <span>Stage</span>
+                <select name="stage">
+                    <option value="">All stages</option>
+                    {% for value, label in stage_choices %}
+                    <option value="{{ value }}"{% if selected_stage == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label class="req-filter-field">
+                <span>Category</span>
+                <select name="category">
+                    <option value="">All categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}"{% if selected_category == category.id|stringformat:'s' %} selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label class="req-filter-field">
+                <span>Responsible party</span>
+                <select name="party_role">
+                    <option value="">All parties</option>
+                    {% for value, label in party_role_choices %}
+                    <option value="{{ value }}"{% if selected_party == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label class="req-filter-field">
+                <span>Verification</span>
+                <select name="verification">
+                    <option value="">Any verification</option>
+                    <option value="yes"{% if selected_verification == 'yes' %} selected{% endif %}>Required</option>
+                    <option value="no"{% if selected_verification == 'no' %} selected{% endif %}>Optional</option>
+                </select>
+            </label>
+
+            <div class="req-filter-actions">
+                <button class="tp-btn" type="submit">
+                    <i data-lucide="filter" aria-hidden="true"></i>
+                    Apply
+                </button>
+
+                {% if selected_type or selected_stage or selected_category or selected_party or selected_required or selected_verification or search %}
+                <a class="tp-btn tp-btn--secondary" href="{% url 'document-requirements' %}">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    <!-- Browser + Results -->
+    <div class="req-main">
+
+        <aside class="req-browser">
+            <div class="req-browser__header">
+                <div class="req-browser__title">
+                    <i data-lucide="folders" aria-hidden="true"></i>
+                    Browse requirements
+                </div>
+            </div>
+
             {% for category, transaction_groups in category_tree %}
-            <details open style="margin-bottom:14px;">
-                <summary style="cursor:pointer; font-weight:800; color:#263548; padding: 8px 0; font-size: .95rem;">{{ category|cut:'_'|title }}</summary>
-                <div style="margin:10px 0 0 0;">
+            <details class="req-category" open>
+                <summary>
+                    <span data-humanize="{{ category }}">{{ category }}</span>
+                </summary>
+
+                <div>
                     {% for transaction_type, items in transaction_groups.items %}
-                    <details style="margin:8px 0;">
-                        <summary style="cursor:pointer; color:#536579; font-weight:700; padding: 6px 0; font-size: .9rem;">{{ transaction_type|title }} <span style="color:#94a3b8; font-weight:500; font-size: .85rem;">({{ items|length }})</span></summary>
-                        <ul style="margin:8px 0 0 14px; padding:0; color:#64748b; font-size:.85rem; list-style: none;">
-                            {% for item in items %}<li style="margin:6px 0; padding: 4px 0;">{{ item.label }}</li>{% endfor %}
+                    <details class="req-type">
+                        <summary>
+                            <span data-humanize="{{ transaction_type }}">{{ transaction_type }}</span>
+                            <span class="req-count">{{ items|length }}</span>
+                        </summary>
+
+                        <ul class="req-type-list">
+                            {% for item in items %}
+                            <li>{{ item.label }}</li>
+                            {% endfor %}
                         </ul>
                     </details>
                     {% endfor %}
                 </div>
             </details>
-            {% empty %}<p class="tp-muted" style="font-size: .9rem;">No requirements configured.</p>{% endfor %}
+            {% empty %}
+            <p class="tp-muted">No requirements configured.</p>
+            {% endfor %}
         </aside>
 
-        <section>
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
-                <h2 style="font-size:1.15rem; margin:0; font-weight:700;">Requirements · <span style="color:#8a99ab; font-weight:600;">{{ page_obj.paginator.count }}</span></h2>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <button class="tp-btn tp-btn--secondary" type="button">Sort</button>
+        <section class="req-results">
+            <div class="req-results__header">
+                <h2 class="req-results__title">
+                    Requirements
+                    <span class="req-results__count">{{ page_obj.paginator.count }}</span>
+                </h2>
+
+                {% if search %}
+                <div class="req-results__meta">
+                    Search: “{{ search }}”
                 </div>
+                {% endif %}
             </div>
 
-            <div class="table-wrap" style="overflow-x: auto; border-radius: 10px; border: 1px solid var(--brand-line);">
-                <table class="tp-table" style="width: 100%; border-collapse: collapse;">
-                    <thead style="background: #f8fafc; border-bottom: 2px solid var(--brand-line);">
+            <div class="req-table-wrap">
+                <table class="req-table">
+                    <colgroup>
+                        <col style="width:28%;">
+                        <col style="width:16%;">
+                        <col style="width:19%;">
+                        <col style="width:16%;">
+                        <col style="width:15%;">
+                        <col style="width:6%;">
+                    </colgroup>
+
+                    <thead>
                         <tr>
-                            <th style="padding: 14px 16px; text-align: left; font-weight: 700; font-size: .9rem; color: #536579; text-transform: uppercase; letter-spacing: .05em;">Requirement</th>
-                            <th style="padding: 14px 16px; text-align: left; font-weight: 700; font-size: .9rem; color: #536579; text-transform: uppercase; letter-spacing: .05em;">Transaction type</th>
-                            <th style="padding: 14px 16px; text-align: left; font-weight: 700; font-size: .9rem; color: #536579; text-transform: uppercase; letter-spacing: .05em;">Stage</th>
-                            <th style="padding: 14px 16px; text-align: left; font-weight: 700; font-size: .9rem; color: #536579; text-transform: uppercase; letter-spacing: .05em;">Responsible party</th>
-                            <th style="padding: 14px 16px; text-align: left; font-weight: 700; font-size: .9rem; color: #536579; text-transform: uppercase; letter-spacing: .05em;">Verification</th>
-                            <th style="padding: 14px 16px; text-align: center; font-weight: 700; font-size: .9rem; color: #536579; text-transform: uppercase; letter-spacing: .05em;">Action</th>
+                            <th>Requirement</th>
+                            <th>Transaction type</th>
+                            <th>Stage</th>
+                            <th>Responsible party</th>
+                            <th>Verification</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for item in requirements %}
-                        <tr style="border-bottom: 1px solid rgba(15,23,42,.08); transition: background-color .2s ease;">
-                            <td style="padding: 14px 16px; vertical-align: top;">
-                                <div style="font-weight: 700; color: var(--brand-dark); font-size: .95rem; margin-bottom: 8px;">{{ item.label }}</div>
-                                {% if item.instructions %}<div style="color:#64748b; font-size:.8rem; line-height:1.4;">{{ item.instructions|truncatewords:15 }}</div>{% endif %}
-                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
-                                    {% if item.required %}<span class="tp-badge tp-badge--success" style="font-size: .75rem;">Required</span>{% else %}<span class="tp-badge tp-badge--neutral" style="font-size: .75rem;">Optional</span>{% endif %}
-                                    {% if item.categoryDefinition or item.category %}<span class="tp-badge tp-badge--neutral" style="font-size: .75rem;">{{ item.categoryDefinition|default:item.category }}</span>{% endif %}
-                                    {% if not item.isActive %}<span class="tp-badge" style="background: #fee2e2; color: #991b1b; font-size: .75rem;">Inactive</span>{% endif %}
+                        <tr>
+                            <td>
+                                <div class="req-table__name">{{ item.label }}</div>
+
+                                {% if item.instructions %}
+                                <div class="req-table__instruction">
+                                    {{ item.instructions|truncatewords:13 }}
+                                </div>
+                                {% endif %}
+
+                                <div class="req-table__badges">
+                                    {% if item.required %}
+                                    <span class="tp-badge tp-badge--success">Required</span>
+                                    {% else %}
+                                    <span class="tp-badge tp-badge--neutral">Optional</span>
+                                    {% endif %}
+
+                                    {% if item.categoryDefinition or item.category %}
+                                    <span class="tp-badge tp-badge--neutral">
+                                        {{ item.categoryDefinition|default:item.category }}
+                                    </span>
+                                    {% endif %}
+
+                                    {% if not item.isActive %}
+                                    <span class="tp-badge tp-badge--danger">Inactive</span>
+                                    {% endif %}
                                 </div>
                             </td>
-                            <td style="padding: 14px 16px; color: #536579; font-size: .9rem;">{{ item.transactionType|default:'All types' }}</td>
-                            <td style="padding: 14px 16px; color: #536579; font-size: .9rem;">{{ item.get_stage_display }}</td>
-                            <td style="padding: 14px 16px; color: #536579; font-size: .9rem;">{{ item.get_partyRole_display }}</td>
-                            <td style="padding: 14px 16px;">
+
+                            <td>
+                                <span class="req-code" data-humanize="{{ item.transactionType|default:'All types' }}">
+                                    {{ item.transactionType|default:'All types' }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="req-stage">{{ item.get_stage_display }}</span>
+                            </td>
+
+                            <td>
+                                <span class="req-code">{{ item.get_partyRole_display }}</span>
+                            </td>
+
+                            <td>
                                 {% if item.verificationRequired %}
-                                    <span class="tp-badge tp-badge--warning" style="font-size: .8rem;">Verification required</span>
+                                <span class="req-verification req-verification--required">
+                                    Verification required
+                                </span>
                                 {% else %}
-                                    <span class="tp-badge tp-badge--neutral" style="font-size: .8rem;">No verification</span>
+                                <span class="req-verification req-verification--none">
+                                    No verification
+                                </span>
                                 {% endif %}
                             </td>
-                            <td style="padding: 14px 16px; text-align:center;">
+
+                            <td class="requirements-action-cell">
                                 <details class="tp-row-menu">
-                                    <summary aria-label="Open row actions" style="cursor: pointer; font-size: 1.2rem; line-height: 1; padding: 4px 8px;">⋮</summary>
+                                    <summary class="tp-row-menu__trigger" aria-label="Open row actions" title="Actions">
+                                        <i data-lucide="more-vertical" aria-hidden="true"></i>
+                                    </summary>
+
                                     <div class="tp-row-menu__panel">
-                                        <a href="{% url 'document-requirement-edit' item.id %}">Edit</a>
+                                        <a class="tp-row-menu__item" href="{% url 'document-requirement-edit' item.id %}">
+                                            <i data-lucide="pencil" aria-hidden="true"></i>
+                                            <span>Edit</span>
+                                        </a>
+
                                         <form method="post" action="{% url 'document-requirement-duplicate' item.id %}">
                                             {% csrf_token %}
-                                            <button type="submit">Duplicate</button>
+                                            <button class="tp-row-menu__item" type="submit">
+                                                <i data-lucide="copy" aria-hidden="true"></i>
+                                                <span>Duplicate</span>
+                                            </button>
                                         </form>
+
                                         <form method="post" action="{% url 'document-requirement-toggle-active' item.id %}">
                                             {% csrf_token %}
-                                            <button type="submit">{% if item.isActive %}Deactivate{% else %}Activate{% endif %}</button>
+                                            <button class="tp-row-menu__item" type="submit">
+                                                {% if item.isActive %}
+                                                <i data-lucide="circle-pause" aria-hidden="true"></i>
+                                                <span>Deactivate</span>
+                                                {% else %}
+                                                <i data-lucide="circle-play" aria-hidden="true"></i>
+                                                <span>Activate</span>
+                                                {% endif %}
+                                            </button>
                                         </form>
+
                                         {% if item.status != 'archived' %}
-                                        <form method="post" action="{% url 'document-requirement-delete' item.id %}" style="border-top:1px solid rgba(15,23,42,.08); margin-top:6px; padding-top:6px;">
+                                        <form class="tp-row-menu__danger-section" method="post" action="{% url 'document-requirement-delete' item.id %}">
                                             {% csrf_token %}
-                                            <button type="submit" style="color:#dc2626;">Archive</button>
+                                            <button class="tp-row-menu__item tp-row-menu__item--danger" type="submit">
+                                                <i data-lucide="archive" aria-hidden="true"></i>
+                                                <span>Archive</span>
+                                            </button>
                                         </form>
                                         {% endif %}
                                     </div>
                                 </details>
                             </td>
                         </tr>
+
                         {% empty %}
-                        <tr><td colspan="6" style="padding: 20px 16px; text-align: center; color: #8a99ab;">No requirements configured.</td></tr>
+                        <tr>
+                            <td colspan="6" class="req-empty">
+                                <div class="req-empty__icon">
+                                    <i data-lucide="file-search" aria-hidden="true"></i>
+                                </div>
+                                <div style="font-weight:800; color:#344054;">No requirements found</div>
+                                <div style="margin-top:4px; color:#98a2b3; font-size:.78rem;">
+                                    Try changing your filters or create a new requirement.
+                                </div>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
             {% if page_obj.has_other_pages %}
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:18px; flex-wrap:wrap; padding-top:18px; border-top:1px solid rgba(15,23,42,.08);">
-                <div style="color:#536579; font-size:.9rem;">
-                    Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+            <nav class="req-pagination" aria-label="Requirements pagination">
+                <div class="req-pagination__status">
+                    Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+
+                <div class="req-pagination__links">
                     {% if page_obj.has_previous %}
-                        <a class="tp-btn tp-btn--secondary" href="?page={{ page_obj.previous_page_number }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}">Previous</a>
+                    <a class="tp-btn tp-btn--secondary" href="?page={{ page_obj.previous_page_number }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}">
+                        Previous
+                    </a>
                     {% endif %}
+
                     {% for num in page_obj.paginator.page_range %}
                         {% if page_obj.number == num %}
-                            <span style="display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px; border-radius:8px; background:var(--brand-primary-soft); color:var(--brand-primary); font-weight:700; border:1px solid rgba(229,79,56,0.15);">{{ num }}</span>
+                        <span class="req-page-number req-page-number--active">{{ num }}</span>
                         {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a href="?page={{ num }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}" style="display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px; border-radius:8px; border:1px solid rgba(15,23,42,.12); color:#263548; text-decoration:none; font-weight:600;">{{ num }}</a>
+                        <a class="req-page-number" href="?page={{ num }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}">
+                            {{ num }}
+                        </a>
                         {% endif %}
                     {% endfor %}
+
                     {% if page_obj.has_next %}
-                        <a class="tp-btn tp-btn--secondary" href="?page={{ page_obj.next_page_number }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}">Next</a>
+                    <a class="tp-btn tp-btn--secondary" href="?page={{ page_obj.next_page_number }}{% if selected_type %}&transaction_type={{ selected_type }}{% endif %}{% if selected_stage %}&stage={{ selected_stage }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_party %}&party_role={{ selected_party }}{% endif %}{% if selected_verification %}&verification={{ selected_verification }}{% endif %}{% if search %}&q={{ search }}{% endif %}">
+                        Next
+                    </a>
                     {% endif %}
                 </div>
-            </div>
+            </nav>
             {% endif %}
         </section>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Humanize machine-readable transaction/category labels in the UI only.
+    document.querySelectorAll("[data-humanize]").forEach(function (element) {
+        var value = element.getAttribute("data-humanize") || element.textContent || "";
+        value = value.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+
+        if (!value) return;
+
+        element.textContent = value
+            .split(" ")
+            .map(function (word) {
+                if (word.toUpperCase() === "SME") return "SME";
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            })
+            .join(" ");
+    });
+
+    // Keep only one row-action popup open at a time.
+    document.querySelectorAll(".tp-row-menu").forEach(function (menu) {
+        menu.addEventListener("toggle", function () {
+            if (!menu.open) return;
+
+            document.querySelectorAll(".tp-row-menu[open]").forEach(function (other) {
+                if (other !== menu) other.removeAttribute("open");
+            });
+        });
+    });
+
+    // Close row-action popup when clicking outside it.
+    document.addEventListener("click", function (event) {
+        document.querySelectorAll(".tp-row-menu[open]").forEach(function (menu) {
+            if (!menu.contains(event.target)) {
+                menu.removeAttribute("open");
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
