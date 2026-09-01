@@ -4,33 +4,758 @@
 
 {% block content %}
 <style>
-    .register-shell { min-height:calc(100vh - 150px); display:grid; place-items:center; }
-    .register-workspace { width:min(1020px,100%); display:grid; grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr); overflow:hidden; border:1px solid var(--brand-line); border-radius:20px; background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.09); }
-    .register-form-panel { padding:44px 50px; }
-    .register-brand { display:flex; align-items:center; gap:10px; color:var(--brand-dark); font-weight:900; text-decoration:none; }
-    .register-brand__mark { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:#111827; color:#fff; }
-    .register-form-panel h1 { margin:38px 0 10px; color:#0b1738; font-size:2.25rem; letter-spacing:-.04em; }
-    .register-intro { margin:0 0 28px; color:var(--brand-muted); line-height:1.6; }
-    .register-form-panel .tp-form-grid { gap:16px; }
-    .register-form-panel .tp-field label { color:#334155; font-size:.8rem; font-weight:800; }
-    .register-form-panel .tp-field input, .register-form-panel .tp-field select { min-height:46px; box-sizing:border-box; }
-    .register-submit { width:100%; min-height:50px; display:inline-flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; }
-    .register-signin { margin:20px 0 0; color:var(--brand-muted); text-align:center; font-size:.88rem; }
-    .register-signin a { color:var(--brand-primary); font-weight:800; }
-    .register-aside { position:relative; overflow:hidden; padding:46px 40px; background:#10233a; color:#fff; }
-    .register-aside::before { content:''; position:absolute; width:320px; height:320px; right:-150px; top:40px; border:1px solid rgba(255,255,255,.18); border-radius:50%; }
-    .register-aside__eyebrow { display:flex; align-items:center; gap:9px; color:#f6a18f; font-size:.72rem; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
-    .register-aside__eyebrow::before { content:''; width:28px; height:2px; background:#f6a18f; }
-    .register-aside h2 { position:relative; max-width:300px; margin:24px 0 14px; font-size:2rem; line-height:1.05; letter-spacing:-.035em; }
-    .register-aside > p { position:relative; max-width:320px; color:#b6c5d5; line-height:1.65; font-size:.9rem; }
-    .register-paths { position:relative; display:grid; gap:12px; margin-top:34px; }
-    .register-path { display:flex; align-items:flex-start; gap:12px; padding:14px; border:1px solid rgba(255,255,255,.15); border-radius:12px; background:rgba(255,255,255,.06); }
-    .register-path svg { width:19px; color:#f6a18f; flex:0 0 auto; margin-top:1px; }
-    .register-path strong { display:block; font-size:.84rem; }
-    .register-path span { display:block; margin-top:3px; color:#b6c5d5; font-size:.76rem; line-height:1.45; }
-    .register-back { position:relative; display:inline-flex; align-items:center; gap:7px; margin-top:30px; color:#fff; font-size:.82rem; font-weight:800; text-decoration:none; }
-    .register-back svg { width:16px; }
-    @media (max-width:760px) { .register-shell { min-height:auto; } .register-workspace { grid-template-columns:1fr; } .register-form-panel { padding:34px 26px; } .register-form-panel h1 { margin-top:34px; } .register-aside { padding:34px 26px; } .register-aside h2 { font-size:1.7rem; } }
+/* =========================================================
+   TRUSTPAY AFRICA — REGISTRATION PAGE
+   ========================================================= */
+
+.register-shell {
+    width: 100%;
+    min-height: calc(100vh - 80px);
+    padding: clamp(32px, 5vw, 70px) clamp(18px, 4vw, 48px);
+
+    display: grid;
+    place-items: center;
+
+    box-sizing: border-box;
+
+    background:
+        radial-gradient(
+            circle at 8% 8%,
+            rgba(239, 90, 60, 0.07),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 92% 88%,
+            rgba(35, 85, 120, 0.07),
+            transparent 27%
+        ),
+        linear-gradient(
+            180deg,
+            #f8fafc 0%,
+            #f3f6f9 100%
+        );
+}
+
+
+/* =========================================================
+   MAIN REGISTRATION CARD
+   ========================================================= */
+
+.register-workspace {
+    width: min(1080px, 100%);
+
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.12fr)
+        minmax(340px, 0.88fr);
+
+    overflow: hidden;
+
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    border-radius: 26px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 30px 80px rgba(15, 23, 42, 0.11),
+        0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
+
+/* =========================================================
+   LEFT FORM PANEL
+   ========================================================= */
+
+.register-form-panel {
+    padding: clamp(42px, 5vw, 64px);
+}
+
+
+.register-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+
+    color: #0f172a;
+
+    font-size: 1rem;
+    font-weight: 800;
+
+    text-decoration: none;
+}
+
+
+.register-brand__mark {
+    width: 40px;
+    height: 40px;
+
+    display: grid;
+    place-items: center;
+
+    flex: 0 0 40px;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #1d3952 0%,
+            #0d1b2a 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 0.9rem;
+    font-weight: 800;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 10px 24px rgba(15,23,42,0.15);
+}
+
+
+.register-form-panel h1 {
+    margin: 44px 0 12px;
+
+    color: #0f172a;
+
+    font-size: clamp(2.35rem, 4vw, 3.25rem);
+    line-height: 1.04;
+
+    letter-spacing: -0.045em;
+
+    font-weight: 800;
+}
+
+
+.register-intro {
+    max-width: 600px;
+
+    margin: 0 0 32px;
+
+    color: #667085;
+
+    font-size: 0.96rem;
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   FORM GRID
+   ========================================================= */
+
+.register-form-panel .tp-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 18px 16px;
+}
+
+
+.register-form-panel .tp-field {
+    min-width: 0;
+}
+
+
+.register-form-panel .tp-field label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #344054;
+
+    font-size: 0.8rem;
+    font-weight: 750;
+}
+
+
+/* =========================================================
+   INPUTS / SELECTS
+   ========================================================= */
+
+.register-form-panel .tp-field input,
+.register-form-panel .tp-field select,
+.register-form-panel .tp-field textarea {
+    width: 100%;
+
+    min-height: 50px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d6dce4;
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    color: #101828;
+
+    font: inherit;
+    font-size: 0.92rem;
+
+    outline: none;
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+}
+
+
+.register-form-panel .tp-field textarea {
+    min-height: 110px;
+    padding-top: 12px;
+    resize: vertical;
+}
+
+
+.register-form-panel .tp-field input:hover,
+.register-form-panel .tp-field select:hover,
+.register-form-panel .tp-field textarea:hover {
+    border-color: #c4ccd6;
+}
+
+
+.register-form-panel .tp-field input:focus,
+.register-form-panel .tp-field select:focus,
+.register-form-panel .tp-field textarea:focus {
+    border-color: var(--brand-primary, #ef5a3c);
+
+    box-shadow:
+        0 0 0 4px rgba(239, 90, 60, 0.10);
+
+    background: #ffffff;
+}
+
+
+/* Checkbox safety */
+
+.register-form-panel .tp-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+
+    min-height: 18px;
+
+    padding: 0;
+
+    margin: 0;
+
+    accent-color: var(--brand-primary, #ef5a3c);
+}
+
+
+/* =========================================================
+   HELP TEXT + ERRORS
+   ========================================================= */
+
+.register-form-panel .tp-field > div:not(.tp-form-error) {
+    color: #8792a3;
+}
+
+
+.register-form-panel .tp-field ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+
+    color: #8792a3;
+
+    font-size: 0.77rem;
+    line-height: 1.45;
+}
+
+
+.tp-form-error {
+    margin-top: 7px;
+
+    color: #b42318;
+
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   SUBMIT BUTTON
+   ========================================================= */
+
+.register-submit {
+    width: 100%;
+
+    min-height: 52px;
+
+    margin-top: 26px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    border: 1px solid var(--brand-primary, #ef5a3c);
+    border-radius: 12px;
+
+    background:
+        var(--brand-primary, #ef5a3c);
+
+    color: #ffffff;
+
+    font-size: 0.92rem;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 12px 24px rgba(239, 90, 60, 0.18);
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+}
+
+
+.register-submit:hover {
+    transform: translateY(-1px);
+
+    background: #d94a2f;
+
+    border-color: #d94a2f;
+
+    box-shadow:
+        0 16px 30px rgba(239, 90, 60, 0.22);
+}
+
+
+.register-submit svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* =========================================================
+   SIGN IN LINK
+   ========================================================= */
+
+.register-signin {
+    margin: 24px 0 0;
+
+    color: #7a8493;
+
+    text-align: center;
+
+    font-size: 0.86rem;
+}
+
+
+.register-signin a {
+    color: var(--brand-primary, #ef5a3c);
+
+    font-weight: 750;
+
+    text-decoration: none;
+}
+
+
+.register-signin a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   RIGHT SIDE PANEL
+   ========================================================= */
+
+.register-aside {
+    position: relative;
+
+    overflow: hidden;
+
+    padding: clamp(46px, 5vw, 64px);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    color: #ffffff;
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(255,255,255,0.08),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 0% 100%,
+            rgba(239,90,60,0.12),
+            transparent 32%
+        ),
+        linear-gradient(
+            145deg,
+            #18344e 0%,
+            #0d1b2a 100%
+        );
+}
+
+
+.register-aside::before {
+    content: "";
+
+    position: absolute;
+
+    width: 320px;
+    height: 320px;
+
+    right: -150px;
+    top: 40px;
+
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 0 28px rgba(255,255,255,0.025),
+        0 0 0 56px rgba(255,255,255,0.016);
+}
+
+
+.register-aside__eyebrow {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    color: #ff9d88;
+
+    font-size: 0.72rem;
+    font-weight: 800;
+
+    letter-spacing: 0.13em;
+
+    text-transform: uppercase;
+}
+
+
+.register-aside__eyebrow::before {
+    content: "";
+
+    width: 28px;
+    height: 2px;
+
+    background: #ff9d88;
+}
+
+
+.register-aside h2 {
+    position: relative;
+    z-index: 2;
+
+    max-width: 390px;
+
+    margin: 24px 0 14px;
+
+    color: #ffffff;
+
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    line-height: 1.05;
+
+    letter-spacing: -0.04em;
+}
+
+
+.register-aside > p {
+    position: relative;
+    z-index: 2;
+
+    max-width: 390px;
+
+    margin: 0;
+
+    color: #b6c5d5;
+
+    font-size: 0.92rem;
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   BUYER / SELLER / BUSINESS CARDS
+   ========================================================= */
+
+.register-paths {
+    position: relative;
+    z-index: 2;
+
+    display: grid;
+
+    gap: 12px;
+
+    margin-top: 34px;
+}
+
+
+.register-path {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 13px;
+
+    padding: 15px;
+
+    border:
+        1px solid rgba(255,255,255,0.12);
+
+    border-radius: 14px;
+
+    background:
+        rgba(255,255,255,0.055);
+
+    backdrop-filter: blur(8px);
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.register-path:hover {
+    transform: translateX(3px);
+
+    border-color:
+        rgba(255,255,255,0.20);
+
+    background:
+        rgba(255,255,255,0.09);
+}
+
+
+.register-path svg {
+    width: 19px;
+    height: 19px;
+
+    flex: 0 0 19px;
+
+    margin-top: 2px;
+
+    color: #ff9d88;
+}
+
+
+.register-path strong {
+    display: block;
+
+    color: #ffffff;
+
+    font-size: 0.87rem;
+    font-weight: 750;
+}
+
+
+.register-path span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #b6c5d5;
+
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   BACK LINK
+   ========================================================= */
+
+.register-back {
+    position: relative;
+    z-index: 2;
+
+    width: fit-content;
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-top: 32px;
+
+    color: #ffffff;
+
+    font-size: 0.82rem;
+    font-weight: 750;
+
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.register-back:hover {
+    color: #ffb2a3;
+
+    transform: translateX(-2px);
+}
+
+
+.register-back svg {
+    width: 16px;
+    height: 16px;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .register-shell {
+        padding: 36px 22px 50px;
+    }
+
+    .register-workspace {
+        grid-template-columns: 1fr;
+
+        max-width: 720px;
+    }
+
+    .register-aside {
+        padding: 42px;
+    }
+
+    .register-aside h2 {
+        max-width: 520px;
+    }
+
+    .register-aside > p {
+        max-width: 540px;
+    }
+
+    .register-paths {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+    .register-path {
+        flex-direction: column;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+    .register-shell {
+        min-height: auto;
+
+        padding: 20px 14px 42px;
+
+        place-items: start center;
+    }
+
+    .register-workspace {
+        width: 100%;
+
+        border-radius: 18px;
+    }
+
+    .register-form-panel {
+        padding: 30px 22px 34px;
+    }
+
+    .register-brand__mark {
+        width: 36px;
+        height: 36px;
+
+        flex-basis: 36px;
+
+        border-radius: 11px;
+    }
+
+    .register-brand {
+        font-size: 0.92rem;
+    }
+
+    .register-form-panel h1 {
+        margin-top: 34px;
+
+        font-size: 2.3rem;
+    }
+
+    .register-intro {
+        margin-bottom: 26px;
+
+        font-size: 0.92rem;
+    }
+
+    .register-form-panel .tp-form-grid {
+        grid-template-columns: 1fr;
+
+        gap: 16px;
+    }
+
+    .register-form-panel .tp-field input,
+    .register-form-panel .tp-field select,
+    .register-form-panel .tp-field textarea {
+        font-size: 16px;
+    }
+
+    .register-submit {
+        margin-top: 20px;
+    }
+
+    .register-aside {
+        padding: 36px 24px;
+    }
+
+    .register-aside h2 {
+        font-size: 1.9rem;
+    }
+
+    .register-paths {
+        grid-template-columns: 1fr;
+    }
+
+    .register-path {
+        flex-direction: row;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .register-shell {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .register-form-panel {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .register-aside {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .register-form-panel h1 {
+        font-size: 2rem;
+    }
+}
 </style>
 <div class="register-shell">
     <div class="register-workspace">
