@@ -3516,3 +3516,180 @@ button {
         font-size: .84rem;
     }
 }
+
+/* =========================================================
+   TRUSTPAY FIXED SIDEBAR
+   Sidebar does NOT move when page/content scrolls
+   ========================================================= */
+
+:root {
+    --tp-topbar-height: 64px;
+    --tp-sidebar-width: 240px;
+}
+
+/* Top navigation stays fixed at the top */
+.tp-topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--tp-topbar-height);
+    z-index: 1200;
+}
+
+/* Entire sidebar is fixed to the viewport */
+.tp-sidebar {
+    position: fixed !important;
+    top: var(--tp-topbar-height) !important;
+    left: 0 !important;
+    bottom: 0 !important;
+
+    width: var(--tp-sidebar-width) !important;
+    height: calc(100vh - var(--tp-topbar-height)) !important;
+    max-height: calc(100vh - var(--tp-topbar-height)) !important;
+
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    z-index: 1000;
+}
+
+/* Main layout no longer needs sidebar as a grid column */
+.tp-app-layout {
+    display: block !important;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Push the content to the right of the fixed sidebar */
+.tp-content,
+.tp-main,
+.tp-main-content {
+    margin-left: var(--tp-sidebar-width) !important;
+    padding-top: var(--tp-topbar-height);
+    width: calc(100% - var(--tp-sidebar-width)) !important;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* If your base template uses main directly */
+.tp-app-layout > main {
+    margin-left: var(--tp-sidebar-width) !important;
+    padding-top: var(--tp-topbar-height);
+    width: calc(100% - var(--tp-sidebar-width)) !important;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Prevent page-wide horizontal overflow */
+html,
+body {
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Sidebar scrolls independently if menu is taller than screen */
+.tp-sidebar {
+    scrollbar-width: thin;
+    overscroll-behavior: contain;
+}
+
+/* Internal wide tables scroll, not the whole application */
+.tp-table-wrapper,
+.table-responsive,
+.audit-table-wrapper,
+.req-table-wrap,
+.req-table-wrapper,
+.payment-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) and (min-width: 821px) {
+
+    :root {
+        --tp-sidebar-width: 210px;
+    }
+
+    .tp-sidebar {
+        width: var(--tp-sidebar-width) !important;
+    }
+
+    .tp-content,
+    .tp-main,
+    .tp-main-content,
+    .tp-app-layout > main {
+        margin-left: var(--tp-sidebar-width) !important;
+        width: calc(100% - var(--tp-sidebar-width)) !important;
+    }
+}
+
+/* =========================================================
+   MOBILE
+   Sidebar becomes drawer
+   ========================================================= */
+
+@media (max-width: 820px) {
+
+    :root {
+        --tp-topbar-height: 60px;
+    }
+
+    .tp-sidebar {
+        position: fixed !important;
+        top: var(--tp-topbar-height) !important;
+        left: 0 !important;
+        bottom: 0 !important;
+
+        width: min(84vw, 280px) !important;
+        height: calc(100vh - var(--tp-topbar-height)) !important;
+
+        transform: translateX(-105%);
+        transition: transform 0.22s ease;
+
+        visibility: hidden;
+        pointer-events: none;
+
+        z-index: 1500;
+    }
+
+    .tp-sidebar.is-open {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .tp-content,
+    .tp-main,
+    .tp-main-content,
+    .tp-app-layout > main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding-top: var(--tp-topbar-height);
+    }
+
+    .tp-mobile-toggle {
+        display: inline-flex !important;
+    }
+}
+
+/* Desktop hides mobile menu button */
+@media (min-width: 821px) {
+    .tp-mobile-toggle {
+        display: none !important;
+    }
+
+    .tp-sidebar {
+        transform: none !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+}
