@@ -1306,10 +1306,12 @@ def settings_view(request):
     pesapal = PesapalConfiguration.objects.first()
     preferences_form = UserSettingsForm(request.POST or None, instance=preferences)
     merchant_transactions = Transaction.objects.filter(createdBy=request.user).select_related('buyer__party', 'seller__party').order_by('-createdAt')[:10]
-    new_api_key = None
+    new_api_key = request.session.pop('new_api_key', None)
     if request.method == 'POST' and request.POST.get('action') == 'generate_api_key':
         scopes = request.POST.getlist('scopes') or ['checkout.write', 'checkout.read']
-        new_api_key = APIKey.objects.create(user=request.user, name=(request.POST.get('key_name') or 'External checkout integration')[:120], key=f'tp_{request.user.pk}_{get_random_string(length=32)}', scopes=scopes)
+        api_key = APIKey.objects.create(user=request.user, name=(request.POST.get('key_name') or 'External checkout integration')[:120], key=f'tp_{request.user.pk}_{get_random_string(length=32)}', scopes=scopes)
+        request.session['new_api_key'] = api_key.key
+        return redirect('settings')
     elif request.method == 'POST' and request.POST.get('action') == 'revoke_api_key':
         APIKey.objects.filter(pk=request.POST.get('key_id'), user=request.user).update(is_active=False)
         return redirect('settings')

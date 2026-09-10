@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 import secrets
 
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction as db_transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -45,9 +46,40 @@ def checkout_session_create(request):
         return Response({'detail': 'The API key requires the checkout.write scope.'}, status=status.HTTP_403_FORBIDDEN)
     data = request.data or {}
     transaction_id = str(data.get('transaction_id', '')).strip()
-    transaction = get_object_or_404(Transaction, pk=transaction_id)
-    if transaction.createdBy_id != request.user.id:
-        return Response({'detail': 'The transaction does not belong to this API account.'}, status=status.HTTP_403_FORBIDDEN)
+    if not transaction_id:
+        transaction_id = str(data.get('order_id', '')).strip()
+        if not transaction_id:
+            return Response({'detail': 'transaction_id or order_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            requested_amount = Decimal(str(data.get('amount', '')))
+            if requested_amount <= 0:
+                raise InvalidOperation
+        except (InvalidOperation, TypeError, ValueError):
+            return Response({'detail': 'amount is required and must be a valid number.'}, status=status.HTTP_400_BAD_REQUEST)
+        currency = str(data.get('currency', 'UGX')).strip().upper()[:10] or 'UGX'
+        title = str(data.get('title', 'External marketplace order')).strip()[:255]
+        description = str(data.get('description', '')).strip()
+        profile = getattr(request.user, 'profile', None)
+        with db_transaction.atomic():
+            transaction = Transaction.objects.filter(pk=transaction_id, createdBy=request.user).first()
+            if transaction is None:
+                transaction = Transaction.objects.create(
+                    id=transaction_id,
+                    createdBy=request.user,
+                    buyer=profile if profile and profile.role == 'client' else None,
+                    seller=profile if profile and profile.role == 'provider' else None,
+                    title=title,
+                    description=description,
+                    transactionType='goods_purchase',
+                    currency=currency,
+                    value=requested_amount,
+                    requiredEscrowAmount=requested_amount,
+                    status='awaiting_funding',
+                )
+    else:
+        transaction = get_object_or_404(Transaction, pk=transaction_id)
+        if transaction.createdBy_id != request.user.id:
+            return Response({'detail': 'The transaction does not belong to this API account.'}, status=status.HTTP_403_FORBIDDEN)
     if transaction.status != 'awaiting_funding':
         return Response({'detail': 'This transaction is not ready for customer funding.'}, status=status.HTTP_409_CONFLICT)
     amount = transaction.outstanding_funding
@@ -74,9 +106,12 @@ def checkout_session_create(request):
         successUrl=str(data.get('success_url', '')).strip(),
         cancelUrl=str(data.get('cancel_url', '')).strip(),
         webhookUrl=str(data.get('webhook_url', '')).strip(),
+        autoCreatedTransaction=not bool(data.get('transaction_id')),
         expiresAt=timezone.now() + timedelta(minutes=30),
     )
-    return Response(_session_payload(request, session), status=status.HTTP_201_CREATED)
+    payload = _session_payload(request, session)
+    payload['transaction_id'] = transaction.id
+    return Response(payload, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
@@ -134,7 +169,7 @@ def checkout_hosted_view(request, token):
         try:
             PaymentRecord.objects.create(
                 transaction=transaction,
-                submittedBy=transaction.buyer.user,
+                submittedBy=transaction.createdBy or (transaction.buyer.user if transaction.buyer_id else None),
                 channel=channel,
                 reference=reference,
                 amount=session.amount,
@@ -142,7 +177,13 @@ def checkout_hosted_view(request, token):
                 status='submitted',
                 notes=f'Hosted checkout session {session.pk}; customer {customer_email}.',
             )
-            apply_action(transaction.id, transaction.buyer.user, 'fund')
+            if session.autoCreatedTransaction:
+                transaction.fundingInitiatedAt = timezone.now()
+                transaction.fundingStatus = 'pending_confirmation'
+                transaction.status = 'funding_confirmation_pending'
+                transaction.save(update_fields=['fundingInitiatedAt', 'fundingStatus', 'status'])
+            else:
+                apply_action(transaction.id, transaction.buyer.user, 'fund')
         except (PermissionDenied, ValidationError) as exc:
             return render(request, 'checkout.html', {'session': session, 'transaction': transaction, 'error': str(exc)})
         session.buyerName = customer_name

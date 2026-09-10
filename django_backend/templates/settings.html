@@ -168,8 +168,11 @@
                 {% if new_api_key %}
                     <div class="tp-api-key-box">
                         <strong>New API key</strong>
-                        <p>{{ new_api_key.key }}</p>
-                        <small class="tp-muted">Copy this immediately. It will not be shown again after this page refresh.</small>
+                        <div class="tp-api-key-box__value">
+                            <p id="new-api-key-value">{{ new_api_key }}</p>
+                            <button class="tp-btn tp-btn--secondary" type="button" data-copy-api-key="new-api-key-value"><i data-lucide="copy"></i>Copy key</button>
+                        </div>
+                        <small class="tp-muted">Copy this immediately. It will not be shown again after you leave or refresh this page.</small>
                     </div>
                 {% endif %}
 
@@ -199,4 +202,13 @@
         </section>
     </div>
 </div>
+{% if new_api_key %}
+<script>
+    document.querySelector('[data-copy-api-key]').addEventListener('click', async function () {
+        const value = document.getElementById(this.dataset.copyApiKey).textContent.trim();
+        await navigator.clipboard.writeText(value);
+        this.lastChild.textContent = 'Copied';
+    });
+</script>
+{% endif %}
 {% endblock %}

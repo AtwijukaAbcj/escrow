@@ -23,13 +23,17 @@
 
 <div class="tp-card tp-section" style="margin-bottom: 24px;">
         <h3 style="margin-top: 0;">Hosted checkout</h3>
-        <p>Create an API key with the <strong>checkout.write</strong> scope, create a session for a funding-ready transaction, and send the returned <strong>checkout_url</strong> to the customer or open it in an iframe.</p>
+        <p>Create an API key with the <strong>checkout.write</strong> scope, then send the complete cart order when the customer chooses TrustPay. TrustPay creates one order-level escrow transaction and one hosted session at that moment. Reuse the same <strong>order_id</strong> when a customer retries payment.</p>
         <pre style="overflow:auto; padding:16px; border-radius:10px; background:#142b3a; color:#dcefeb; line-height:1.6;"><code>POST /api/v1/checkout/sessions/
 Authorization: Api-Key tp_your_secret_key
 Content-Type: application/json
 
 {
-    "transaction_id": "your-transaction-id",
+    "order_id": "AGRO-ORDER-1042",
+    "title": "Agro marketplace order",
+    "amount": "2040.00",
+    "currency": "UGX",
+    "description": "Milk x2, Fresh Dodo x1",
     "external_reference": "ORDER-1042",
     "buyer_name": "Amina Buyer",
     "buyer_email": "amina@example.com",
@@ -39,7 +43,7 @@ Content-Type: application/json
 
 <div class="tp-card tp-section" style="margin-bottom: 24px;">
         <h3 style="margin-top: 0;">Embed checkout on a website</h3>
-        <p>Keep the API key on your merchant server. Your server creates the session, returns only the short-lived <strong>checkout_url</strong> to the browser, and the browser opens that URL inside a modal or iframe.</p>
+        <p>Keep the API key on your merchant server. Your server sends the completed cart only when the customer clicks Pay, receives the hosted <strong>checkout_url</strong>, and returns that URL to the browser.</p>
         <pre style="overflow:auto; padding:16px; border-radius:10px; background:#142b3a; color:#dcefeb; line-height:1.6;"><code>&lt;button id="pay-with-escrow" type="button"&gt;Pay securely with TrustPay&lt;/button&gt;
 
 &lt;dialog id="trustpay-checkout"&gt;

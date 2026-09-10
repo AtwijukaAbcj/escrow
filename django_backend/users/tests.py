@@ -8,10 +8,10 @@ from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import PermissionDenied, ValidationError
 
-from escrow.models import Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
+from escrow.models import CheckoutSession, Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
 from escrow.views import PaymentForm
 
-from .models import AuditLog, Permission, Role, RolePermission, UserModuleAccess, UserRole
+from .models import APIKey, AuditLog, Permission, Role, RolePermission, UserModuleAccess, UserRole
 from .services import has_permission
 from escrow.services import apply_action, apply_dispute_action, apply_milestone_action, expire_overdue_transactions, open_dispute, resolve_dispute, resolve_document_requirements, verify_document
 
@@ -811,6 +811,71 @@ class RbacIntegrationTests(TestCase):
         self.assertContains(response, 'Merchant hosted checkout order')
         self.assertIn('merchant_transactions', response.context)
         self.assertIn(txn, response.context['merchant_transactions'])
+
+    def test_api_key_generation_redirects_and_reveals_once(self):
+        self.client.force_login(self.client_user)
+
+        response = self.client.post(reverse('settings'), {
+            'action': 'generate_api_key',
+            'key_name': 'Agro integration',
+            'scopes': ['checkout.write', 'checkout.read'],
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('settings'))
+        api_key = APIKey.objects.get(user=self.client_user, name='Agro integration')
+        first_view = self.client.get(reverse('settings'))
+        self.assertContains(first_view, api_key.key)
+        second_view = self.client.get(reverse('settings'))
+        self.assertNotContains(second_view, api_key.key)
+
+    def test_checkout_request_creates_one_order_transaction_and_reuses_it(self):
+        api_key = APIKey.objects.create(
+            user=self.client_user,
+            name='Agro test integration',
+            key='tp_test_agro_checkout_key',
+            scopes=['checkout.write', 'checkout.read'],
+        )
+
+        payload = {
+            'order_id': 'agro-order-1042',
+            'title': 'Agro marketplace order',
+            'amount': '2040.00',
+            'currency': 'UGX',
+            'description': 'Milk x2, Fresh Dodo x1',
+            'buyer_name': 'Test Buyer',
+            'buyer_email': 'buyer@example.com',
+        }
+        first_response = self.client.post(
+            '/api/v1/checkout/sessions/',
+            payload,
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Api-Key {api_key.key}',
+        )
+        self.assertEqual(first_response.status_code, 201, first_response.content.decode())
+        self.assertEqual(first_response.json()['transaction_id'], 'agro-order-1042')
+        self.assertEqual(Transaction.objects.filter(id='agro-order-1042').count(), 1)
+        self.assertEqual(CheckoutSession.objects.filter(transaction_id='agro-order-1042').count(), 1)
+
+        second_response = self.client.post(
+            '/api/v1/checkout/sessions/',
+            payload,
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Api-Key {api_key.key}',
+        )
+        self.assertEqual(second_response.status_code, 201, second_response.content.decode())
+        self.assertEqual(Transaction.objects.filter(id='agro-order-1042').count(), 1)
+        self.assertEqual(CheckoutSession.objects.filter(transaction_id='agro-order-1042').count(), 2)
+
+        checkout_url = first_response.json()['checkout_url']
+        payment_response = self.client.post(
+            checkout_url.replace('http://testserver', ''),
+            {'customer_name': 'Test Buyer', 'customer_email': 'buyer@example.com', 'channel': 'card_gateway'},
+        )
+        self.assertEqual(payment_response.status_code, 200)
+        self.assertContains(payment_response, 'Your payment is protected.')
+        transaction = Transaction.objects.get(id='agro-order-1042')
+        self.assertEqual(transaction.status, 'funding_confirmation_pending')
 
     def test_checkout_session_creation_renders_success_page(self):
         self.client_user.set_password('Pass12345!')

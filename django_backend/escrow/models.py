@@ -918,6 +918,7 @@ class CheckoutSession(models.Model):
     successUrl = models.URLField(blank=True)
     cancelUrl = models.URLField(blank=True)
     webhookUrl = models.URLField(blank=True)
+    autoCreatedTransaction = models.BooleanField(default=False)
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='open')
     expiresAt = models.DateTimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
