@@ -788,6 +788,62 @@ class RbacIntegrationTests(TestCase):
         self.assertEqual(revoke_response.status_code, 200)
         self.assertFalse(revoke_response.json()['is_active'])
 
+    def test_settings_page_shows_merchant_portal_for_merchant_account(self):
+        self.client_user.set_password('Pass12345!')
+        self.client_user.save()
+        txn = Transaction.objects.create(
+            id='merchant-portal-test',
+            buyer=self.buyer,
+            seller=self.seller,
+            createdBy=self.client_user,
+            title='Merchant hosted checkout order',
+            description='Created by the merchant account',
+            value=4500,
+            currency='UGX',
+            status='awaiting_funding',
+        )
+
+        self.client.force_login(self.client_user)
+        response = self.client.get(reverse('settings'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Merchant portal')
+        self.assertContains(response, 'Merchant hosted checkout order')
+        self.assertIn('merchant_transactions', response.context)
+        self.assertIn(txn, response.context['merchant_transactions'])
+
+    def test_checkout_session_creation_renders_success_page(self):
+        self.client_user.set_password('Pass12345!')
+        self.client_user.save()
+
+        txn = Transaction.objects.create(
+            id='checkout-session-success-test',
+            buyer=self.buyer,
+            seller=self.seller,
+            createdBy=self.client_user,
+            title='Hosted checkout session test',
+            description='Created for hosted checkout verification',
+            value=25000,
+            currency='UGX',
+            status='awaiting_funding',
+        )
+
+        self.client.force_login(self.client_user)
+        response = self.client.post(
+            reverse('checkout-session-create-page', args=[txn.id]),
+            {
+                'buyer_name': 'Jane Buyer',
+                'buyer_email': 'jane@example.com',
+                'external_reference': 'ORDER-1001',
+                'success_url': 'https://merchant.example/success',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Hosted checkout created')
+        self.assertContains(response, 'ORDER-1001')
+        self.assertContains(response, 'https://merchant.example/success')
+
     def test_dashboard_documentation_page_is_accessible_for_authenticated_users(self):
         self.client.force_login(self.client_user)
         response = self.client.get('/docs/')

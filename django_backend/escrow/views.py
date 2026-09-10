@@ -19,6 +19,7 @@ from uuid import uuid4
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.utils.crypto import get_random_string
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpResponse, HttpResponseForbidden
 from django.http import HttpResponseRedirect
@@ -29,6 +30,7 @@ from django.utils.html import escape
 from functools import wraps
 from users.services import has_permission, permission_required
 from users.models import UserSettings
+from users.models import APIKey
 from .services import ACTION_RULES, apply_action, apply_dispute_action, apply_milestone_action, open_dispute, resolve_dispute
 from .pesapal import create_pesapal_order, encrypt_secret
 from users.notification_service import publish_event
@@ -1303,6 +1305,14 @@ def settings_view(request):
     profile = getattr(request.user, 'profile', None)
     pesapal = PesapalConfiguration.objects.first()
     preferences_form = UserSettingsForm(request.POST or None, instance=preferences)
+    merchant_transactions = Transaction.objects.filter(createdBy=request.user).select_related('buyer__party', 'seller__party').order_by('-createdAt')[:10]
+    new_api_key = None
+    if request.method == 'POST' and request.POST.get('action') == 'generate_api_key':
+        scopes = request.POST.getlist('scopes') or ['checkout.write', 'checkout.read']
+        new_api_key = APIKey.objects.create(user=request.user, name=(request.POST.get('key_name') or 'External checkout integration')[:120], key=f'tp_{request.user.pk}_{get_random_string(length=32)}', scopes=scopes)
+    elif request.method == 'POST' and request.POST.get('action') == 'revoke_api_key':
+        APIKey.objects.filter(pk=request.POST.get('key_id'), user=request.user).update(is_active=False)
+        return redirect('settings')
     if request.method == 'POST' and preferences_form.is_valid():
         request.user.first_name = request.POST.get('first_name', '').strip()
         request.user.last_name = request.POST.get('last_name', '').strip()
@@ -1310,7 +1320,15 @@ def settings_view(request):
         request.user.save(update_fields=['first_name', 'last_name', 'email'])
         preferences_form.save()
         return redirect('settings')
-    return render(request, 'settings.html', {'preferences_form': preferences_form, 'pesapal': pesapal, 'profile': profile, 'pesapal_configured': bool(pesapal and pesapal.consumerKeyCiphertext and pesapal.consumerSecretCiphertext)})
+    return render(request, 'settings.html', {
+        'preferences_form': preferences_form,
+        'pesapal': pesapal,
+        'profile': profile,
+        'pesapal_configured': bool(pesapal and pesapal.consumerKeyCiphertext and pesapal.consumerSecretCiphertext),
+        'api_keys': APIKey.objects.filter(user=request.user).order_by('-created_at'),
+        'new_api_key': new_api_key,
+        'merchant_transactions': merchant_transactions,
+    })
 
 
 @csrf_exempt

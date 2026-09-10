@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .integration import checkout_hosted_view
+from .integration import checkout_hosted_view, checkout_session_create_page
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     path('transactions/new/', views.transaction_create_view, name='transaction-create'),
     path('transactions/<str:transaction_id>/', views.transaction_detail_view, name='transaction-detail'),
     path('transactions/<str:transaction_id>/fund/', views.payment_submit_view, name='payment-submit'),
+    path('transactions/<str:transaction_id>/checkout/new/', checkout_session_create_page, name='checkout-session-create-page'),
     path('transactions/<str:transaction_id>/<str:action>/', views.transaction_action_view, name='transaction-action'),
     path('kyc/submit/', views.kyc_submit_view, name='kyc-submit'),
     path('kyc/', views.kyc_view, name='kyc'),

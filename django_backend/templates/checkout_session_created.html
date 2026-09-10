@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Hosted checkout created | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="checkout-result tp-card">
+    <div class="checkout-result__icon">✓</div>
+    <span class="tp-eyebrow">Hosted checkout created</span>
+    <h1>Customer payment link is ready.</h1>
+    <p>This checkout is unique to the transaction and linked to the merchant account. The buyer can pay securely through the hosted page without exposing your private API credentials.</p>
+
+    <div class="checkout-result__summary">
+        <span>Transaction</span>
+        <strong>{{ transaction.title|default:transaction.id }}</strong>
+        <span>Order reference</span>
+        <strong>{{ session.externalReference|default:'N/A' }}</strong>
+        <span>Checkout URL</span>
+        <strong><a href="{{ checkout_url }}" target="_blank" rel="noreferrer">{{ checkout_url }}</a></strong>
+        <span>Return URL</span>
+        <strong>{{ session.successUrl|default:'Not set' }}</strong>
+    </div>
+
+    <div class="tp-settings-actions">
+        <a class="tp-btn" href="{{ checkout_url }}" target="_blank" rel="noreferrer">Open hosted checkout</a>
+    </div>
+</div>
+{% endblock %}

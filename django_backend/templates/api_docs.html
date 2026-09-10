@@ -37,6 +37,42 @@ Content-Type: application/json
 }</code></pre>
 </div>
 
+<div class="tp-card tp-section" style="margin-bottom: 24px;">
+        <h3 style="margin-top: 0;">Embed checkout on a website</h3>
+        <p>Keep the API key on your merchant server. Your server creates the session, returns only the short-lived <strong>checkout_url</strong> to the browser, and the browser opens that URL inside a modal or iframe.</p>
+        <pre style="overflow:auto; padding:16px; border-radius:10px; background:#142b3a; color:#dcefeb; line-height:1.6;"><code>&lt;button id="pay-with-escrow" type="button"&gt;Pay securely with TrustPay&lt;/button&gt;
+
+&lt;dialog id="trustpay-checkout"&gt;
+    &lt;button id="close-checkout" type="button"&gt;Close&lt;/button&gt;
+    &lt;iframe
+        id="trustpay-frame"
+        title="TrustPay secure checkout"
+        width="100%"
+        height="720"
+        loading="lazy"
+        allow="payment *"&gt;&lt;/iframe&gt;
+&lt;/dialog&gt;
+
+&lt;script&gt;
+    const dialog = document.querySelector('#trustpay-checkout');
+    const frame = document.querySelector('#trustpay-frame');
+
+    document.querySelector('#pay-with-escrow').addEventListener('click', async () =&gt; {
+        // Your server calls POST /api/v1/checkout/sessions/ with Api-Key auth.
+        const response = await fetch('/api/create-trustpay-session', { method: 'POST' });
+        const session = await response.json();
+        frame.src = session.checkout_url;
+        dialog.showModal();
+    });
+
+    document.querySelector('#close-checkout').addEventListener('click', () =&gt; {
+        dialog.close();
+        frame.src = '';
+    });
+&lt;/script&gt;</code></pre>
+        <p class="tp-muted">Never put the <strong>Api-Key</strong> value in browser JavaScript. Use your server endpoint to create the session, then listen for the merchant return URL or payment webhook.</p>
+</div>
+
 <div class="tp-card tp-section">
     <h3 style="margin-top: 0;">Endpoint reference</h3>
     <table class="tp-table" style="margin-top: 16px;">

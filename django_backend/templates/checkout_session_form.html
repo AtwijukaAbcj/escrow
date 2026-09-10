@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Create checkout link | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="tp-card tp-section checkout-link-form"><div class="tp-page-heading"><div><span class="tp-eyebrow">Merchant checkout</span><h1>Create customer payment link</h1><p>Generate a unique hosted checkout URL for {{ transaction.title|default:transaction.reference }}.</p></div></div><form method="post">{% csrf_token %}<div class="tp-form-grid"><div class="tp-field"><label>Customer name</label><input name="buyer_name" required></div><div class="tp-field"><label>Customer email</label><input name="buyer_email" type="email" required></div><div class="tp-field"><label>Order reference</label><input name="external_reference" placeholder="ORDER-1001" required></div><div class="tp-field"><label>Return URL</label><input name="success_url" type="url" placeholder="https://merchant.example/success"></div></div><p class="tp-muted">Amount to collect: <strong>{{ transaction.currency }} {{ transaction.outstanding_funding }}</strong></p><button class="tp-btn" type="submit">Generate checkout link</button></form></div>
+{% endblock %}

@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -86,6 +87,30 @@ def checkout_session_detail(request, session_id):
         return Response({'detail': 'The API key requires a checkout.read scope.'}, status=status.HTTP_403_FORBIDDEN)
     session = get_object_or_404(CheckoutSession, pk=session_id, createdBy=request.user)
     return Response(_session_payload(request, session))
+
+
+@login_required
+def checkout_session_create_page(request, transaction_id):
+    transaction = get_object_or_404(Transaction, pk=transaction_id)
+    if transaction.createdBy_id != request.user.id and not request.user.is_staff:
+        return HttpResponseForbidden('Only the transaction owner can create its checkout.')
+    if transaction.status != 'awaiting_funding':
+        return HttpResponseForbidden('This transaction is not ready for customer funding.')
+    if request.method == 'POST':
+        session = CheckoutSession.objects.create(
+            transaction=transaction,
+            createdBy=request.user,
+            token=secrets.token_urlsafe(32),
+            externalReference=request.POST.get('external_reference', '').strip()[:128],
+            buyerName=request.POST.get('buyer_name', '').strip()[:255],
+            buyerEmail=request.POST.get('buyer_email', '').strip()[:254],
+            amount=transaction.outstanding_funding,
+            currency=transaction.currency,
+            successUrl=request.POST.get('success_url', '').strip(),
+            expiresAt=timezone.now() + timedelta(minutes=30),
+        )
+        return render(request, 'checkout_session_created.html', {'session': session, 'checkout_url': request.build_absolute_uri(reverse('checkout-hosted', kwargs={'token': session.token})), 'transaction': transaction})
+    return render(request, 'checkout_session_form.html', {'transaction': transaction})
 
 
 @csrf_protect
