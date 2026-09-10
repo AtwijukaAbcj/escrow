@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import api_me, api_register
 
 from .views import api_key_list_create, api_key_revoke, api_me, api_notification_preferences, api_notification_read, api_notifications, api_notifications_read_all, api_notifications_unread_count, api_register
+from escrow.integration import checkout_session_create, checkout_session_detail
 
 urlpatterns = [
     path('auth/register/', api_register, name='api-register'),
@@ -12,6 +13,8 @@ urlpatterns = [
     path('me/', api_me, name='api-me'),
     path('api-keys/', api_key_list_create, name='api-key-list-create'),
     path('api-keys/<int:key_id>/revoke/', api_key_revoke, name='api-key-revoke'),
+    path('checkout/sessions/', checkout_session_create, name='checkout-session-create'),
+    path('checkout/sessions/<int:session_id>/', checkout_session_detail, name='checkout-session-detail'),
     path('notifications/', api_notifications, name='api-notifications'),
     path('notifications/unread-count/', api_notifications_unread_count, name='api-notifications-unread-count'),
     path('notifications/<int:notification_id>/read/', api_notification_read, name='api-notification-read'),

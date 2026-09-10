@@ -272,22 +272,55 @@ def apply_action(transaction_id, actor, action, reason='', amount=None):
         if previous_contract:
             previous_contract.status = 'superseded'
             previous_contract.save(update_fields=['status', 'updatedAt'])
-        milestone_lines = '\n'.join(f'- {item.name}: {txn.currency} {item.amount} due {item.dueDate or "not set"}' for item in txn.milestones.all()) or '- No milestones defined.'
+        contract_version = (previous_contract.version + 1) if previous_contract else 1
+        milestone_lines = '\n'.join(
+            f'{index}. {item.name}: {txn.currency} {item.amount}; due {item.dueDate or "not set"}; status {item.get_status_display()}'
+            for index, item in enumerate(txn.milestones.all().order_by('sequence', 'id'), start=1)
+        ) or 'No milestones have been defined.'
+        contract_content = (
+            'TRUSTPAY AFRICA\n'
+            'ESCROW SERVICES AGREEMENT\n\n'
+            f'Agreement reference: TP-C-{timezone.now().year}-{txn.reference or txn.id[:8]}-v{contract_version}\n'
+            f'Effective date: {timezone.localdate()}\n'
+            f'Agreement version: {contract_version}\n\n'
+            '1. PARTIES\n'
+            f'Buyer / Client: {txn.buyer}\n'
+            f'Seller / Provider: {txn.seller}\n'
+            'TrustPay Africa acts as the escrow service provider and transaction record keeper.\n\n'
+            '2. PURPOSE AND SCOPE\n'
+            f'The parties agree to use TrustPay Africa to administer the transaction identified as {txn.reference or txn.id}. '
+            f'The transaction concerns: {txn.title or "the agreed goods or services"}.\n'
+            f'Description: {txn.description or "No additional description was provided."}\n\n'
+            '3. COMMERCIAL TERMS\n'
+            f'Transaction value: {txn.currency} {txn.value}\n'
+            f'Required escrow amount: {txn.currency} {txn.requiredEscrowAmount}\n'
+            f'Expected completion date: {txn.expectedCompletionDate or "Not specified"}\n'
+            'The payment currency, amount, transaction reference, and approved workflow recorded in TrustPay constitute the controlling transaction details.\n\n'
+            '4. MILESTONES AND DELIVERABLES\n'
+            f'{milestone_lines}\n\n'
+            '5. ADDITIONAL TERMS AND SPECIAL CONDITIONS\n'
+            f'{txn.specialTerms or "No additional special conditions were recorded."}\n\n'
+            '6. ESCROW AND PAYMENT CONTROL\n'
+            'TrustPay will record submitted payments and hold confirmed funds in the transaction ledger. Funds will not be released to the provider until the applicable delivery evidence, verification, and buyer approval requirements have been satisfied. TrustPay may place a transaction on hold or freeze funds where required for operational, compliance, dispute, or security reasons.\n\n'
+            '7. DELIVERY, EVIDENCE, AND ACCEPTANCE\n'
+            'The provider must submit the agreed goods, services, or deliverables and any required evidence through the transaction workflow. The buyer may approve the delivery, request further action, or raise a dispute in accordance with the available workflow. A verification record or approval does not waive rights arising from fraud, misrepresentation, material non-conformity, or applicable law.\n\n'
+            '8. DISPUTES, CANCELLATION, AND REFUNDS\n'
+            'A party may raise a dispute through TrustPay before release where the delivery, evidence, amount, or other transaction condition is contested. Cancellation and refunds are subject to the transaction state, available balance, required approvals, and any applicable payment or dispute review. An active dispute blocks release while it is under review.\n\n'
+            '9. RECORDS AND ELECTRONIC SIGNATURES\n'
+            'The parties consent to electronic records and account-based confirmations for this agreement. The TrustPay audit trail, transaction ledger, uploaded evidence, decisions, and signature records form part of the official transaction record. Each signer confirms that they have authority to act for the party identified above and agree to the terms of this version.\n\n'
+            '10. SERVICE TERMS\n'
+            'This agreement is administered subject to the TrustPay Africa platform terms, applicable payment provider rules, and applicable law. If a conflict exists, the transaction-specific terms and recorded approvals govern the commercial transaction, while the platform terms govern use of the TrustPay service.\n\n'
+            '11. EXECUTION\n'
+            'By signing electronically, the Buyer and Seller confirm that they have reviewed this agreement, understand the escrow conditions, and agree to proceed with the transaction under the terms recorded above.\n\n'
+            'BUYER / CLIENT SIGNATURE: ______________________________\n'
+            'SELLER / PROVIDER SIGNATURE: ____________________________'
+        )
         contract = Contract.objects.create(
             transaction=txn,
-            version=(previous_contract.version + 1) if previous_contract else 1,
+            version=contract_version,
             transactionVersion=txn.version,
             title=f'Escrow agreement - {txn.reference or txn.id}',
-            content=(
-                f'ESCROW AGREEMENT\n\nContract reference: TP-C-{timezone.now().year}-{txn.reference or txn.id[:8]}-v{(previous_contract.version + 1) if previous_contract else 1}\n'
-                f'Transaction: {txn.reference or txn.id}\nBuyer: {txn.buyer}\nSeller: {txn.seller}\n'
-                f'Amount: {txn.currency} {txn.value}\nRequired escrow: {txn.currency} {txn.requiredEscrowAmount}\n\n'
-                f'Title: {txn.title or "Untitled transaction"}\nDescription: {txn.description or "No description provided."}\n\n'
-                f'Milestones / deliverables:\n{milestone_lines}\n\n'
-                'Funds will be held in escrow and released only after required delivery verification and buyer approval. '
-                'Cancellation, refund, dispute, and fee handling follow the TrustPay Africa transaction workflow.\n\n'
-                'BUYER SIGNATURE: ____________________\nSELLER SIGNATURE: ____________________'
-            ),
+            content=contract_content,
             status='awaiting_buyer_signature',
             createdBy=actor,
         )

@@ -189,7 +189,7 @@ class Command(BaseCommand):
                 'verifiedBy': 'staff.demo' if key == 'demo_work' else '', 'verifiedAt': now if key == 'demo_work' else None,
                 'createdAt': now,
             })
-            if created or not document.file:
+            if created or not document.file or not document.file.storage.exists(document.file.name):
                 document.file.save(f'{document_id}.txt', ContentFile(f'Demo evidence for {label}. This file is for local demonstration only.'))
             DocumentWorkflowRecord.objects.get_or_create(document=document, transaction=milestone.transaction, action='demo_uploaded', defaults={'requirement': requirement, 'status': document.status, 'actor': users['seller.demo'], 'details': {'source': 'seed_demo_data'}})
 

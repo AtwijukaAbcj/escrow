@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .integration import checkout_hosted_view
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -36,6 +37,7 @@ urlpatterns = [
     path('milestones/<int:milestone_id>/', views.milestone_detail_view, name='milestone-detail'),
     path('milestones/<int:milestone_id>/<str:action>/', views.milestone_action_view, name='milestone-action'),
         path('contracts/', views.contracts_view, name='contracts'),
+        path('contracts/<int:contract_id>/download/', views.contract_download_view, name='contract-download'),
         path('contracts/<int:contract_id>/', views.contract_detail_view, name='contract-detail'),
         path('disputes/', views.disputes_view, name='disputes'),
         path('disputes/new/', views.dispute_create_view, name='dispute-create'),
@@ -50,6 +52,7 @@ urlpatterns = [
     path('audit/', views.audit_console_view, name='audit-console'),
     path('payments/pesapal/', views.pesapal_settings_view, name='pesapal-settings'),
     path('settings/', views.settings_view, name='settings'),
+    path('checkout/<str:token>/', checkout_hosted_view, name='checkout-hosted'),
     path('transactions/<str:transaction_id>/pay/pesapal/', views.pesapal_payment_view, name='pesapal-payment'),
     path('payments/pesapal/ipn/', views.pesapal_ipn_view, name='pesapal-ipn'),
 

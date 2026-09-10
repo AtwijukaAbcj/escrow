@@ -21,7 +21,77 @@
 
     <div class="workspace-grid"><section class="tp-card workspace-panel"><div class="workspace-panel__heading"><div><h2>Overview</h2><p class="section-note">Parties, terms and transaction context</p></div></div><dl class="detail-grid"><div class="detail-item"><dt>Buyer / Client</dt><dd>{{ transaction.buyer }}</dd></div><div class="detail-item"><dt>Seller / Provider</dt><dd>{{ transaction.seller }}</dd></div><div class="detail-item"><dt>Funding status</dt><dd>{{ transaction.fundingStatus|title }}</dd></div><div class="detail-item"><dt>Expected completion</dt><dd>{{ transaction.expectedCompletionDate|date:'d M Y'|default:'Not set' }}</dd></div><div class="detail-item" style="grid-column:1/-1;"><dt>Description</dt><dd>{{ transaction.description|default:'No description provided.' }}</dd></div></dl></section><section class="tp-card workspace-panel"><div class="workspace-panel__heading"><div><h2>Payments &amp; escrow</h2><p class="section-note">Read-only ledger summary</p></div></div><dl class="detail-grid"><div class="detail-item"><dt>Pending funding</dt><dd>{{ transaction.currency }} {{ transaction.outstanding_funding }}</dd></div><div class="detail-item"><dt>Released</dt><dd>{{ transaction.currency }} {{ transaction.releasedAmount }}</dd></div><div class="detail-item"><dt>Refunded</dt><dd>{{ transaction.currency }} {{ transaction.refundedAmount }}</dd></div><div class="detail-item"><dt>Frozen amount</dt><dd>{{ transaction.currency }} {{ transaction.frozenAmount }}</dd></div></dl></section></div>
 
-    <section class="tp-card workspace-panel"><div class="workspace-panel__heading"><div><h2>Workflow</h2><p class="section-note">Ordered progress through the escrow lifecycle</p></div></div><div class="workflow">{% for step in workflow_steps %}<div class="workflow-step {% if step.complete %}workflow-step--complete{% elif transaction.status == step.status %}workflow-step--current{% endif %}"><span class="workflow-step__marker">{% if step.complete %}&#10003;{% else %}{{ step.number }}{% endif %}</span><div><span class="workflow-step__label">{{ step.label }}</span>{% if transaction.status == step.status %}<span class="workflow-step__meta">Current stage</span>{% endif %}</div>{% if step.complete %}<span class="tp-badge tp-badge--success">Complete</span>{% elif transaction.status == step.status %}<span class="tp-badge tp-badge--warning">Current</span>{% else %}<span class="tp-badge tp-badge--neutral">Pending</span>{% endif %}</div>{% endfor %}</div></section>
+    <section class="tp-card workspace-panel workflow-timeline-section">
+        <div class="workspace-panel__heading">
+            <div>
+                <h2>Workflow</h2>
+                <p class="section-note">Ordered progress through the escrow lifecycle</p>
+            </div>
+            <div class="workflow-progress-mini">
+                <span class="workflow-progress-mini__caption">Step {{ workflow_current_step|default:1 }} of {{ workflow_total_steps|default:workflow_steps|length }}</span>
+                <div class="workflow-progress-mini__bar">
+                    <span class="workflow-progress-mini__bar-fill" style="width: {{ workflow_progress_percent|default:0 }}%;"></span>
+                </div>
+                <span class="workflow-progress-mini__percent">{{ workflow_progress_percent|default:0 }}%</span>
+            </div>
+        </div>
+
+        <div class="workflow-timeline">
+            {% for step in workflow_steps %}
+            <div class="workflow-timeline-row">
+                <span class="workflow-timeline-marker">
+                    {% if step.complete %}
+                    <span class="workflow-marker workflow-marker--done">✓</span>
+                    {% elif transaction.status == step.status %}
+                    <span class="workflow-marker workflow-marker--active">●</span>
+                    {% else %}
+                    <span class="workflow-marker workflow-marker--pending">○</span>
+                    {% endif %}
+                </span>
+
+                <article class="workflow-timeline-card {% if step.complete %}workflow-timeline-card--completed{% elif transaction.status == step.status %}workflow-timeline-card--current{% else %}workflow-timeline-card--pending{% endif %}">
+                    <div class="workflow-timeline-card__body">
+                        <div class="workflow-timeline-card__main">
+                            <div class="workflow-timeline-card__content">
+                                <div class="workflow-timeline-card__top">
+                                    <span class="workflow-timeline-card__title">
+                                        <span class="workflow-step-number">{{ step.number }}.</span>
+                                        <span class="workflow-step-label">{{ step.label }}</span>
+                                        {% if transaction.status == step.status %}
+                                        <span class="workflow-current-label">Current stage</span>
+                                        {% endif %}
+                                    </span>
+
+                                    <span class="workflow-timeline-card__actions">
+                                        {% if step.complete %}
+                                        <span class="workflow-timeline-card__badge workflow-timeline-card__badge--completed">Completed</span>
+                                        {% elif transaction.status == step.status %}
+                                        <span class="workflow-timeline-card__badge workflow-timeline-card__badge--current">In progress</span>
+                                        {% else %}
+                                        <span class="workflow-timeline-card__badge workflow-timeline-card__badge--pending">Pending</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                <div class="workflow-timeline-card__bottom">
+                                    <span class="workflow-timeline-card__description">
+                                        {% if step.complete %}
+                                        {{ step.label }} completed.
+                                        {% elif transaction.status == step.status %}
+                                        {{ step.label }} is the current step.
+                                        {% else %}
+                                        Waiting for this workflow step.
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
 
     <section class="tp-card workspace-panel"><div class="workspace-panel__heading"><div><h2>Payments &amp; escrow records</h2><p class="section-note">Payment submissions and confirmation status</p></div></div><div class="table-wrap"><table class="tp-table"><thead><tr><th>Channel</th><th>Reference</th><th>Amount</th><th>Status</th><th>Receipt</th></tr></thead><tbody>{% for payment in transaction.payments.all %}<tr><td>{{ payment.get_channel_display }}</td><td>{{ payment.reference }}</td><td>{{ payment.currency }} {{ payment.amount }}</td><td>{{ payment.get_status_display }}</td><td>{% if payment.receipt %}<a href="{{ payment.receipt.file.url }}" target="_blank" rel="noopener">View receipt</a>{% else %}Not attached{% endif %}</td></tr>{% empty %}<tr><td colspan="5">No payments submitted.</td></tr>{% endfor %}</tbody></table></div></section>
 

@@ -20,11 +20,12 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.utils.text import slugify
+from django.utils.html import escape
 from functools import wraps
 from users.services import has_permission, permission_required
 from users.models import UserSettings
@@ -134,7 +135,7 @@ def transaction_document_checklist(transaction):
             'party_role': requirement.get_partyRole_display(),
             'stage': requirement.get_stage_display(),
             'verification_required': requirement.verificationRequired,
-            'status': latest.get(requirement.pk).get_status_display() if latest.get(requirement.pk) else 'Missing',
+            'status': latest.get(requirement.pk).status.replace('_', ' ').title() if latest.get(requirement.pk) else 'Missing',
             'document': latest.get(requirement.pk),
         }
         for requirement in requirements
@@ -159,6 +160,8 @@ class TransactionForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = user
+        self.fields['specialTerms'].label = 'Additional terms and special conditions'
+        self.fields['specialTerms'].help_text = 'Optional details that will be included in the formal agreement.'
         self.fields['buyer'].queryset = UserProfile.objects.filter(role='client').select_related('user', 'party')
         self.fields['seller'].queryset = UserProfile.objects.filter(role='provider').select_related('user', 'party')
         if user and not is_staff_user(user):
@@ -172,9 +175,10 @@ class TransactionForm(forms.ModelForm):
 
     class Meta:
         model = Transaction
-        fields = ['buyer', 'seller', 'title', 'description', 'transactionType', 'currency', 'value', 'requiredEscrowAmount', 'acceptanceDeadline', 'fundingDeadline', 'expectedCompletionDate']
+        fields = ['buyer', 'seller', 'title', 'description', 'specialTerms', 'transactionType', 'currency', 'value', 'requiredEscrowAmount', 'acceptanceDeadline', 'fundingDeadline', 'expectedCompletionDate']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
+            'specialTerms': forms.Textarea(attrs={'rows': 5, 'placeholder': 'Add delivery conditions, acceptance criteria, warranties, or other deal-specific terms.'}),
             'acceptanceDeadline': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'fundingDeadline': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'expectedCompletionDate': forms.DateInput(attrs={'type': 'date'}),
@@ -244,6 +248,9 @@ def api_docs_view(request):
         {'method': 'GET', 'path': '/transactions/<transaction_id>/', 'description': 'View detailed transaction state, workflow steps, and document checklist.'},
         {'method': 'GET', 'path': '/documents/', 'description': 'List uploaded documents and review status.'},
         {'method': 'GET', 'path': '/kyc/', 'description': 'Display KYC status, submission progress, and verification results.'},
+        {'method': 'POST', 'path': '/api/v1/checkout/sessions/', 'description': 'Create a customer-facing hosted escrow checkout session with an API key.'},
+        {'method': 'GET', 'path': '/api/v1/checkout/sessions/<session_id>/', 'description': 'Read the status and hosted URL for a checkout session.'},
+        {'method': 'GET', 'path': '/checkout/<token>/', 'description': 'Public hosted checkout page for the customer.'},
     ]
     return render(request, 'api_docs.html', {'api_endpoints': api_endpoints})
 
@@ -293,6 +300,7 @@ def transaction_detail_view(request, transaction_id):
     profile = getattr(request.user, 'profile', None)
     if txn.status == 'awaiting_counterparty_acceptance':
         txn.status = 'awaiting_party_review'
+
     workflow_steps = [
         {'number': '•', 'label': 'Both review transaction details', 'status': 'awaiting_party_review', 'complete': bool(txn.buyerReviewedAt and txn.sellerReviewedAt)},
         {'number': 1, 'label': 'Buyer accepts', 'status': 'awaiting_buyer_acceptance', 'complete': bool(txn.buyerAcceptedAt)},
@@ -308,6 +316,42 @@ def transaction_detail_view(request, transaction_id):
         {'number': 11, 'label': 'Funds released', 'status': 'release_pending', 'complete': bool(txn.releasedAt)},
         {'number': 12, 'label': 'Transaction completed', 'status': 'completed', 'complete': txn.status == 'completed'},
     ]
+
+    workflow_status_order = [
+        'awaiting_party_review',
+        'awaiting_buyer_acceptance',
+        'awaiting_seller_acceptance',
+        'contract_pending',
+        'awaiting_buyer_signature',
+        'awaiting_seller_signature',
+        'awaiting_funding',
+        'funding_confirmation_pending',
+        'in_progress',
+        'awaiting_verification',
+        'awaiting_buyer_approval',
+        'release_pending',
+        'completed',
+    ]
+
+    workflow_total_steps = len(workflow_steps)
+    workflow_current_step = 1
+    workflow_progress_percent = 0
+
+    if txn.status in workflow_status_order:
+        current_index = workflow_status_order.index(txn.status)
+        workflow_current_step = current_index + 1
+        workflow_progress_percent = int(round((workflow_current_step / workflow_total_steps) * 100))
+        for idx, step in enumerate(workflow_steps):
+            if idx < current_index:
+                step['complete'] = True
+            elif idx == current_index:
+                step['complete'] = txn.status == 'completed'
+            else:
+                step['complete'] = False
+    elif txn.status == 'completed':
+        workflow_current_step = workflow_total_steps
+        workflow_progress_percent = 100
+
     action_labels = {
         'review': 'Review transaction', 'buyer_accept': 'Accept as buyer', 'seller_accept': 'Accept as seller',
         'generate_contract': 'Generate contract', 'buyer_sign': 'Sign as buyer', 'seller_sign': 'Sign as seller',
@@ -375,6 +419,9 @@ def transaction_detail_view(request, transaction_id):
         'next_action': action,
         'next_action_label': action_labels.get(action),
         'workflow_steps': workflow_steps,
+        'workflow_current_step': workflow_current_step,
+        'workflow_total_steps': workflow_total_steps,
+        'workflow_progress_percent': workflow_progress_percent,
         'buyer_reviewed': bool(txn.buyerReviewedAt),
         'seller_reviewed': bool(txn.sellerReviewedAt),
         'document_checklist': transaction_document_checklist(txn),
@@ -924,13 +971,59 @@ def contract_detail_view(request, contract_id):
     profile = getattr(request.user, 'profile', None)
     is_buyer = contract.transaction.buyer_id == getattr(profile, 'pk', None)
     is_seller = contract.transaction.seller_id == getattr(profile, 'pk', None)
+    can_edit_terms = is_staff_user(request.user) or is_buyer or is_seller
+    if request.method == 'POST' and request.POST.get('action') == 'update_terms':
+        if not can_edit_terms:
+            return HttpResponseForbidden('Only the transaction parties or authorized staff can update agreement terms.')
+        if contract.signatures.filter(status='signed').exists() or contract.status == 'fully_signed':
+            return HttpResponseForbidden('Executed agreements cannot be changed.')
+        contract.additionalTerms = request.POST.get('additional_terms', '').strip()
+        contract.save(update_fields=['additionalTerms', 'updatedAt'])
+        return redirect('contract-detail', contract_id=contract.pk)
     signature = contract.signatures.filter(signer=request.user).first()
+    has_signed = contract.signatures.filter(status='signed').exists()
     next_action = None
     if is_buyer and contract.status == 'awaiting_buyer_signature' and not signature:
         next_action = 'buyer_sign'
     elif is_seller and contract.status == 'awaiting_seller_signature' and not signature:
         next_action = 'seller_sign'
-    return render(request, 'contract_detail.html', {'contract': contract, 'next_action': next_action, 'is_buyer': is_buyer, 'is_seller': is_seller})
+    return render(request, 'contract_detail.html', {'contract': contract, 'next_action': next_action, 'is_buyer': is_buyer, 'is_seller': is_seller, 'can_edit_terms': can_edit_terms, 'has_signed': has_signed})
+
+
+@login_required
+@contract_screen_access
+def contract_download_view(request, contract_id):
+    contract = get_object_or_404(
+        Contract.objects.select_related('transaction', 'transaction__buyer', 'transaction__seller', 'createdBy').prefetch_related('signatures', 'transaction__milestones'),
+        pk=contract_id,
+        transaction__in=visible_transactions(request.user),
+    )
+    transaction = contract.transaction
+    milestones = list(transaction.milestones.order_by('sequence', 'id'))
+    signatures = list(contract.signatures.all())
+    milestone_rows = ''.join(
+        f'<tr><td>{escape(milestone.name)}</td><td>{escape(str(milestone.amount))} {escape(transaction.currency)}</td><td>{escape(milestone.get_status_display())}</td></tr>'
+        for milestone in milestones
+    ) or '<tr><td colspan="3">No milestones recorded.</td></tr>'
+    signature_rows = ''.join(
+        f'<div class="signature"><strong>{escape(signature.get_signerRole_display())}</strong><span>{escape(str(signature.signer))} · {escape(signature.get_status_display())}</span></div>'
+        for signature in signatures
+    ) or '<div class="signature"><strong>Signatures</strong><span>No signatures recorded.</span></div>'
+    content = escape(contract.content).replace('\n', '<br>')
+    additional_terms = escape(contract.additionalTerms).replace('\n', '<br>') if contract.additionalTerms else 'No additional terms were recorded.'
+    document = f'''<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>{escape(contract.reference or contract.title)}</title>
+<style>body{{font:15px/1.6 Georgia,serif;color:#17202a;max-width:820px;margin:48px auto;padding:0 28px}}header{{border-bottom:3px solid #e85d3f;padding-bottom:22px;margin-bottom:28px}}h1{{font:32px Georgia,serif;margin:4px 0}}h2{{font:19px Georgia,serif;margin-top:30px}}.eyebrow{{font:12px Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#e85d3f;font-weight:bold}}.meta{{font:13px Arial,sans-serif;color:#667085}}dl{{display:grid;grid-template-columns:180px 1fr;gap:8px 18px}}dt{{font:bold 12px Arial,sans-serif;text-transform:uppercase;color:#667085}}dd{{margin:0}}table{{width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:13px}}th,td{{text-align:left;padding:10px;border-bottom:1px solid #dfe3e8}}th{{color:#667085;font-size:11px;text-transform:uppercase}}.terms{{border-top:1px solid #dfe3e8;padding-top:18px}}.signature{{display:inline-flex;flex-direction:column;min-width:220px;margin:12px 24px 0 0;padding-top:28px;border-top:1px solid #17202a;font-family:Arial,sans-serif}}.signature span{{font-size:12px;color:#667085;margin-top:4px}}footer{{margin-top:42px;padding-top:14px;border-top:1px solid #dfe3e8;color:#667085;font:11px Arial,sans-serif}}</style></head>
+<body><header><div class="eyebrow">TrustPay Africa · Escrow agreement</div><h1>{escape(contract.title)}</h1><div class="meta">{escape(contract.reference or '')} · Version {contract.version} · {escape(contract.get_status_display())}</div></header>
+<h2>Transaction summary</h2><dl><dt>Transaction</dt><dd>{escape(transaction.reference or transaction.id)}</dd><dt>Buyer / Client</dt><dd>{escape(str(transaction.buyer))}</dd><dt>Seller / Provider</dt><dd>{escape(str(transaction.seller))}</dd><dt>Value</dt><dd>{escape(str(transaction.value))} {escape(transaction.currency)}</dd><dt>Generated</dt><dd>{contract.generatedAt.strftime('%d %b %Y')}</dd></dl>
+<h2>Milestones</h2><table><thead><tr><th>Milestone</th><th>Amount</th><th>Status</th></tr></thead><tbody>{milestone_rows}</tbody></table>
+<h2>Agreement terms</h2><div class="terms">{content}</div>
+<h2>Additional terms and special conditions</h2><div class="terms">{additional_terms}</div>
+<h2>Signatures</h2>{signature_rows}<footer>Generated by TrustPay Africa. This download represents contract version {contract.version} for transaction {escape(transaction.reference or transaction.id)}.</footer></body></html>'''
+    response = HttpResponse(document, content_type='text/html; charset=utf-8')
+    filename = slugify(contract.reference or contract.title) or f'contract-{contract.pk}'
+    response['Content-Disposition'] = f'attachment; filename="{filename}.html"'
+    return response
 
 
 class DisputeForm(forms.ModelForm):

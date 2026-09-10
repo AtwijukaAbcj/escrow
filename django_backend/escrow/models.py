@@ -233,6 +233,7 @@ class Transaction(models.Model):
     createdBy = models.ForeignKey(User, related_name='created_transactions', on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=255, blank=True, default='')
     description = models.TextField(blank=True, null=True)
+    specialTerms = models.TextField(blank=True, null=True)
     transactionType = models.CharField(max_length=64, choices=TRANSACTION_TYPES, default='general_escrow')
     currency = models.CharField(max_length=10, default='USD')
     value = models.DecimalField(max_digits=20, decimal_places=2, default=0)
@@ -329,7 +330,7 @@ class Transaction(models.Model):
             raise ValueError('A transaction buyer and seller must be different users.')
         if self.pk and not self._state.adding:
             previous = self.__class__.objects.get(pk=self.pk)
-            material_fields = ('buyer_id', 'seller_id', 'title', 'description', 'transactionType', 'currency', 'value', 'requiredEscrowAmount', 'expectedCompletionDate')
+            material_fields = ('buyer_id', 'seller_id', 'title', 'description', 'specialTerms', 'transactionType', 'currency', 'value', 'requiredEscrowAmount', 'expectedCompletionDate')
             if any(getattr(previous, field) != getattr(self, field) for field in material_fields):
                 self.version = previous.version + 1
                 self.buyerAcceptedAt = None
@@ -364,6 +365,7 @@ class Contract(models.Model):
     transactionVersion = models.PositiveIntegerField(default=1)
     title = models.CharField(max_length=255, default='Escrow agreement')
     content = models.TextField()
+    additionalTerms = models.TextField(blank=True)
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='generated')
     effectiveAt = models.DateTimeField(null=True, blank=True)
     executedAt = models.DateTimeField(null=True, blank=True)
@@ -894,6 +896,35 @@ class PaymentInstruction(models.Model):
     accountDetails = models.CharField(max_length=255, blank=True)
     instructions = models.TextField(blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+
+
+class CheckoutSession(models.Model):
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('payment_submitted', 'Payment Submitted'),
+        ('completed', 'Completed'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    transaction = models.ForeignKey(Transaction, related_name='checkout_sessions', on_delete=models.CASCADE)
+    createdBy = models.ForeignKey(User, related_name='checkout_sessions', on_delete=models.PROTECT)
+    token = models.CharField(max_length=128, unique=True)
+    externalReference = models.CharField(max_length=128, blank=True)
+    buyerName = models.CharField(max_length=255, blank=True)
+    buyerEmail = models.EmailField(blank=True)
+    amount = models.DecimalField(max_digits=20, decimal_places=2)
+    currency = models.CharField(max_length=10)
+    successUrl = models.URLField(blank=True)
+    cancelUrl = models.URLField(blank=True)
+    webhookUrl = models.URLField(blank=True)
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='open')
+    expiresAt = models.DateTimeField(null=True, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.transaction_id} checkout {self.externalReference or self.pk}'
 
 
 class EscrowLedgerEntry(models.Model):

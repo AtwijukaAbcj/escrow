@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Secure checkout | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="checkout-shell">
+    <section class="checkout-intro">
+        <span class="tp-eyebrow">Protected purchase</span>
+        <h1>Pay with confidence.</h1>
+        <p>Your payment is held in escrow and only released after the agreed delivery is completed and approved.</p>
+        <div class="checkout-trust"><span>Escrow protected</span><span>Secure payment handoff</span><span>Delivery approval</span></div>
+    </section>
+    <section class="checkout-card tp-card">
+        <div class="checkout-card__top"><div><span class="tp-muted">Order</span><h2>{{ transaction.title|default:'Protected transaction' }}</h2><p>{{ session.externalReference|default:transaction.reference|default:transaction.id }}</p></div><div class="checkout-amount"><span>Total held</span><strong>{{ session.currency }} {{ session.amount }}</strong></div></div>
+        {% if error %}<div class="tp-form-error checkout-error">{{ error }}</div>{% endif %}
+        <form method="post" class="checkout-form">
+            {% csrf_token %}
+            <div class="checkout-form__section"><h3>Your details</h3><div class="tp-form-grid"><div class="tp-field"><label for="customer_name">Full name</label><input id="customer_name" name="customer_name" value="{{ session.buyerName }}" required></div><div class="tp-field"><label for="customer_email">Email address</label><input id="customer_email" type="email" name="customer_email" value="{{ session.buyerEmail }}" required></div></div></div>
+            <div class="checkout-form__section"><h3>Payment method</h3><div class="checkout-methods"><label class="checkout-method"><input type="radio" name="channel" value="card_gateway" checked><span><strong>Card or mobile wallet</strong><small>Secure payment processing</small></span></label><label class="checkout-method"><input type="radio" name="channel" value="bank_transfer"><span><strong>Bank transfer</strong><small>Use the payment reference provided</small></span></label></div><input type="hidden" name="reference" value=""></div>
+            <button class="tp-btn checkout-submit" type="submit">Continue to secure payment</button>
+            <p class="checkout-note">By continuing, your payment will be submitted for TrustPay confirmation and held until delivery conditions are met.</p>
+        </form>
+    </section>
+</div>
+{% endblock %}

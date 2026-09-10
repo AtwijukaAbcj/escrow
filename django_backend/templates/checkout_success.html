@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Payment submitted | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="checkout-result tp-card"><div class="checkout-result__icon">&#10003;</div><span class="tp-eyebrow">Payment submitted</span><h1>Your payment is protected.</h1><p>TrustPay has received the payment request for <strong>{{ transaction.title|default:'this transaction' }}</strong>. The funds remain held until the agreed delivery is verified and approved.</p><div class="checkout-result__summary"><span>Amount held</span><strong>{{ session.currency }} {{ session.amount }}</strong><span>Reference</span><strong>{{ session.externalReference|default:transaction.reference|default:transaction.id }}</strong></div><a class="tp-btn" href="{% if session.successUrl %}{{ session.successUrl }}{% else %}/{% endif %}">Return to merchant</a></div>
+{% endblock %}

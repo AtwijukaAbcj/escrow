@@ -21,6 +21,22 @@
     </ol>
 </div>
 
+<div class="tp-card tp-section" style="margin-bottom: 24px;">
+        <h3 style="margin-top: 0;">Hosted checkout</h3>
+        <p>Create an API key with the <strong>checkout.write</strong> scope, create a session for a funding-ready transaction, and send the returned <strong>checkout_url</strong> to the customer or open it in an iframe.</p>
+        <pre style="overflow:auto; padding:16px; border-radius:10px; background:#142b3a; color:#dcefeb; line-height:1.6;"><code>POST /api/v1/checkout/sessions/
+Authorization: Api-Key tp_your_secret_key
+Content-Type: application/json
+
+{
+    "transaction_id": "your-transaction-id",
+    "external_reference": "ORDER-1042",
+    "buyer_name": "Amina Buyer",
+    "buyer_email": "amina@example.com",
+    "success_url": "https://merchant.example/paid"
+}</code></pre>
+</div>
+
 <div class="tp-card tp-section">
     <h3 style="margin-top: 0;">Endpoint reference</h3>
     <table class="tp-table" style="margin-top: 16px;">
