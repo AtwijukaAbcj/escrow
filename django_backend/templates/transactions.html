@@ -12,7 +12,8 @@
         {% if 'transactions.create' in user_permissions %}<a class="tp-btn" href="{% url 'transaction-create' %}">Create transaction</a>{% endif %}
     </div>
 
-    <table class="tp-table">
+    <div class="table-wrap">
+        <table class="tp-table">
         <thead>
             <tr>
                 <th>Reference</th>
@@ -28,8 +29,21 @@
             {% for item in transactions %}
             <tr>
                 <td><a href="{% url 'transaction-detail' item.id %}">{{ item.reference|default:item.id }}</a><div class="tp-muted" style="font-size:.75rem;">{{ item.title|default:'Untitled transaction' }}</div></td>
-                <td>{{ item.buyer.user.get_full_name|default:item.buyer.user.email }}</td>
-                <td>{{ item.seller.user.get_full_name|default:item.seller.user.email }}</td>
+                <td>
+                    {% if item.buyer and item.buyer.user %}
+                        {{ item.buyer.user.get_full_name|default:item.buyer.user.email }}
+                    {% else %}
+                        <span class="tp-muted">Not assigned</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if item.seller and item.seller.user %}
+                        {{ item.seller.user.get_full_name|default:item.seller.user.email }}
+                    {% else %}
+                        <span class="tp-muted">Not assigned</span>
+                    {% endif %}
+                </td>
                 <td>{{ item.currency }} {{ item.value }}</td>
                 <td><span class="tp-badge tp-badge--{% if item.status == 'completed' %}success{% elif item.status == 'awaiting_acceptance' %}warning{% else %}neutral{% endif %}">{{ item.status|title }}</span></td>
                 <td>{{ item.createdAt|date:'d M Y' }}</td>
@@ -40,5 +54,6 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 {% endblock %}
