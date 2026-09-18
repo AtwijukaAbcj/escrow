@@ -37,13 +37,15 @@ Content-Type: application/json
     "external_reference": "ORDER-1042",
     "buyer_name": "Amina Buyer",
     "buyer_email": "amina@example.com",
-    "success_url": "https://merchant.example/paid"
+    "success_url": "https://merchant.example/paid",
+    "webhook_url": "https://merchant.example/api/trustpay/webhook",
+    "merchant_origin": "https://merchant.example"
 }</code></pre>
 </div>
 
 <div class="tp-card tp-section" style="margin-bottom: 24px;">
         <h3 style="margin-top: 0;">Embed checkout on a website</h3>
-        <p>Keep the API key on your merchant server. Your server sends the completed cart only when the customer clicks Pay, receives the hosted <strong>checkout_url</strong>, and returns that URL to the browser.</p>
+        <p>Keep the API key on your merchant server. Your server sends the completed cart only when the customer clicks Pay, receives the hosted <strong>checkout_url</strong>, and returns that URL to the browser. Send a unique <strong>Idempotency-Key</strong> header so network retries reuse the same checkout session.</p>
         <pre style="overflow:auto; padding:16px; border-radius:10px; background:#142b3a; color:#dcefeb; line-height:1.6;"><code>&lt;button id="pay-with-escrow" type="button"&gt;Pay securely with TrustPay&lt;/button&gt;
 
 &lt;dialog id="trustpay-checkout"&gt;
@@ -74,7 +76,7 @@ Content-Type: application/json
         frame.src = '';
     });
 &lt;/script&gt;</code></pre>
-        <p class="tp-muted">Never put the <strong>Api-Key</strong> value in browser JavaScript. Use your server endpoint to create the session, then listen for the merchant return URL or payment webhook.</p>
+        <p class="tp-muted">Never put the <strong>Api-Key</strong> value in browser JavaScript. Use your server endpoint to create the session, then listen for the merchant return URL or payment webhook. Webhooks include <strong>X-TrustPay-Timestamp</strong> and <strong>X-TrustPay-Signature</strong>; verify the HMAC-SHA256 signature using the dedicated webhook secret shown once when the key is created. The iframe emits <strong>trustpay.checkout.payment_submitted</strong>, but use the signed webhook as the server-side source of truth.</p>
 </div>
 
 <div class="tp-card tp-section">

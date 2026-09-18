@@ -638,14 +638,22 @@ def apply_milestone_action(milestone_id, actor, action, reason=''):
         missing = requirements.exclude(pk__in=submitted)
         if missing.exists():
             raise ValidationError('Required milestone evidence is missing: ' + ', '.join(missing.values_list('label', flat=True)))
-        milestone.status = 'under_review' if milestone.verificationRequired else ('approved' if not milestone.buyerApprovalRequired else 'submitted')
+        if milestone.verificationRequired:
+            milestone.status = 'under_review'
+        elif milestone.buyerApprovalRequired:
+            milestone.status = 'submitted'
+        else:
+            milestone.status = 'release_eligible'
+            milestone.releaseStatus = 'eligible' if txn.available_escrow_balance >= (milestone.releaseAmount or milestone.amount) else 'blocked_insufficient_escrow'
         milestone.submittedBy = actor
         milestone.submittedAt = timezone.now()
     elif action in ('milestone_verify', 'milestone_request_changes', 'milestone_reject'):
         if milestone.status not in ('submitted', 'under_review'):
             raise ValidationError('This milestone is not awaiting verification.')
         if action == 'milestone_verify':
-            milestone.status = 'approved' if not milestone.buyerApprovalRequired else 'approved'
+            milestone.status = 'approved' if milestone.buyerApprovalRequired else 'release_eligible'
+            if not milestone.buyerApprovalRequired:
+                milestone.releaseStatus = 'eligible' if txn.available_escrow_balance >= (milestone.releaseAmount or milestone.amount) else 'blocked_insufficient_escrow'
             milestone.verifiedBy = actor
             milestone.verifiedAt = timezone.now()
             milestone.verificationComment = reason
@@ -660,7 +668,7 @@ def apply_milestone_action(milestone_id, actor, action, reason=''):
             milestone.status = 'rejected'
             milestone.verificationComment = reason
     elif action == 'milestone_approve':
-        if milestone.status != 'approved' or not milestone.buyerApprovalRequired:
+        if milestone.status not in ('approved', 'submitted') or milestone.verificationRequired or not milestone.buyerApprovalRequired:
             raise ValidationError('This milestone is not ready for buyer approval.')
         milestone.buyerDecision = 'approved'
         milestone.buyerDecisionBy = actor
@@ -672,9 +680,9 @@ def apply_milestone_action(milestone_id, actor, action, reason=''):
             milestone.releaseStatus = 'blocked_transaction'
         else:
             milestone.releaseStatus = 'eligible'
-            milestone.status = 'release_eligible'
+        milestone.status = 'release_eligible'
     elif action == 'milestone_release':
-        if milestone.status != 'release_eligible' or milestone.releaseStatus != 'eligible' or milestone.paidAt:
+        if milestone.status != 'release_eligible' or milestone.paidAt:
             raise ValidationError('This milestone is not eligible for release.')
         release_amount = milestone.releaseAmount or milestone.amount
         if release_amount <= 0 or release_amount > txn.available_escrow_balance:

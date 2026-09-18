@@ -89,6 +89,8 @@ class APIKey(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='api_keys')
     name = models.CharField(max_length=120)
     key = models.CharField(max_length=200, unique=True)
+    webhookSecret = models.CharField(max_length=200, default='', blank=True)
+    allowedOrigins = models.JSONField(default=list, blank=True)
     scopes = models.JSONField(default=list, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -118,6 +120,33 @@ class UserSettings(models.Model):
 
     def __str__(self):
         return f'Settings for {self.user.username}'
+
+
+class EmailConfiguration(models.Model):
+    host = models.CharField(max_length=255, blank=True)
+    port = models.PositiveIntegerField(default=587)
+    username = models.CharField(max_length=255, blank=True)
+    password = models.CharField(max_length=255, blank=True)
+    useTls = models.BooleanField(default=True)
+    useSsl = models.BooleanField(default=False)
+    fromEmail = models.EmailField(default='notifications@trustpay.local')
+    enabled = models.BooleanField(default=False)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.host or 'Email configuration'
+
+
+class LoginOTP(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='login_otps')
+    codeHash = models.CharField(max_length=128)
+    expiresAt = models.DateTimeField()
+    attempts = models.PositiveIntegerField(default=0)
+    used = models.BooleanField(default=False)
+    createdAt = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-createdAt',)
 
 
 class Notification(models.Model):

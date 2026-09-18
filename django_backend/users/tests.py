@@ -1,7 +1,10 @@
 from datetime import timedelta
+import re
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -11,7 +14,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from escrow.models import CheckoutSession, Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
 from escrow.views import PaymentForm
 
-from .models import APIKey, AuditLog, Permission, Role, RolePermission, UserModuleAccess, UserRole
+from .models import APIKey, AuditLog, EmailConfiguration, LoginOTP, Permission, Role, RolePermission, UserModuleAccess, UserRole
 from .services import has_permission
 from escrow.services import apply_action, apply_dispute_action, apply_milestone_action, expire_overdue_transactions, open_dispute, resolve_dispute, resolve_document_requirements, verify_document
 
@@ -95,6 +98,53 @@ class RbacIntegrationTests(TestCase):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('dashboard'))
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_login_requires_email_otp_before_creating_session(self):
+        self.client_user.email = 'client@example.com'
+        self.client_user.save(update_fields=['email'])
+
+        response = self.client.post(reverse('login'), {'username': 'client-test', 'password': 'Pass12345!'})
+
+        self.assertRedirects(response, reverse('login'))
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        otp = LoginOTP.objects.get(user=self.client_user)
+        self.assertFalse(otp.used)
+        self.assertEqual(response.wsgi_request.session['login_otp_id'], otp.pk)
+        from django.core import mail
+        self.assertEqual(len(mail.outbox), 1)
+        code = re.search(r'\b(\d{6})\b', mail.outbox[0].body).group(1)
+
+        verify_response = self.client.post(reverse('login'), {'code': code})
+
+        self.assertRedirects(verify_response, reverse('dashboard'))
+        self.assertTrue(verify_response.wsgi_request.user.is_authenticated)
+        otp.refresh_from_db()
+        self.assertTrue(otp.used)
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_invalid_login_otp_increments_attempts(self):
+        self.client_user.email = 'client@example.com'
+        self.client_user.save(update_fields=['email'])
+        self.client.post(reverse('login'), {'username': 'client-test', 'password': 'Pass12345!'})
+        otp = LoginOTP.objects.get(user=self.client_user)
+
+        response = self.client.post(reverse('login'), {'code': '000000'})
+
+        self.assertEqual(response.status_code, 200)
+        otp.refresh_from_db()
+        self.assertEqual(otp.attempts, 1)
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+
+    def test_only_staff_can_save_email_configuration(self):
+        self.client.force_login(self.client_user)
+        forbidden = self.client.post(reverse('settings'), {'action': 'save_email_configuration', 'host': 'smtp.example.com'})
+        self.assertEqual(forbidden.status_code, 403)
+
+        self.client.force_login(self.admin)
+        saved = self.client.post(reverse('settings'), {'action': 'save_email_configuration', 'host': 'smtp.example.com', 'port': 587, 'username': 'mailer', 'password': 'secret', 'useTls': 'on', 'fromEmail': 'no-reply@example.com', 'enabled': 'on'})
+        self.assertRedirects(saved, reverse('settings'))
+        self.assertTrue(EmailConfiguration.objects.get().enabled)
 
     def test_kyc_review_updates_party_compliance_state(self):
         party = Party.objects.create(id='kyc-review-party', displayName='KYC Review Party', role='buyer')
@@ -376,6 +426,31 @@ class RbacIntegrationTests(TestCase):
         self.assertEqual(EscrowLedgerEntry.objects.filter(transaction=self.owned, entryType='debit').count(), 1)
         with self.assertRaises(ValidationError):
             apply_milestone_action(milestone.pk, self.admin, 'milestone_release')
+
+    def test_milestone_without_review_or_buyer_approval_becomes_release_eligible(self):
+        milestone = Milestone.objects.create(
+            transaction=self.owned,
+            name='Automatic release delivery',
+            amount=5,
+            currency='USD',
+            verificationRequired=False,
+            buyerApprovalRequired=False,
+        )
+        EscrowLedgerEntry.objects.create(
+            transaction=self.owned,
+            entryType='credit',
+            amount=5,
+            currency='USD',
+            reference='MILESTONE-AUTO-FUND',
+            description='Funding',
+        )
+
+        apply_milestone_action(milestone.pk, self.provider_user, 'milestone_start')
+        apply_milestone_action(milestone.pk, self.provider_user, 'milestone_submit')
+        milestone.refresh_from_db()
+
+        self.assertEqual(milestone.status, 'release_eligible')
+        self.assertEqual(milestone.releaseStatus, 'eligible')
 
     def test_unassigned_user_cannot_verify_milestone(self):
         milestone = Milestone.objects.create(transaction=self.owned, name='Review', amount=5, currency='USD', status='under_review')
@@ -876,6 +951,65 @@ class RbacIntegrationTests(TestCase):
         self.assertContains(payment_response, 'Your payment is protected.')
         transaction = Transaction.objects.get(id='agro-order-1042')
         self.assertEqual(transaction.status, 'funding_confirmation_pending')
+
+    def test_checkout_request_idempotency_key_reuses_the_same_session(self):
+        api_key = APIKey.objects.create(
+            user=self.client_user,
+            name='Idempotent checkout integration',
+            key='tp_test_idempotent_checkout_key',
+            scopes=['checkout.write', 'checkout.read'],
+        )
+        payload = {
+            'order_id': 'idempotent-order-1001',
+            'title': 'Idempotent order',
+            'amount': '100.00',
+            'currency': 'UGX',
+        }
+        headers = {
+            'HTTP_AUTHORIZATION': f'Api-Key {api_key.key}',
+            'HTTP_IDEMPOTENCY_KEY': 'checkout-attempt-1',
+        }
+        first_response = self.client.post('/api/v1/checkout/sessions/', payload, content_type='application/json', **headers)
+        second_response = self.client.post('/api/v1/checkout/sessions/', payload, content_type='application/json', **headers)
+
+        self.assertEqual(first_response.status_code, 201)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertEqual(first_response.json()['id'], second_response.json()['id'])
+        self.assertEqual(CheckoutSession.objects.filter(transaction_id='idempotent-order-1001').count(), 1)
+
+    @patch('escrow.integration.urlopen')
+    def test_checkout_payment_submitted_webhook_is_signed(self, mock_urlopen):
+        api_key = APIKey.objects.create(
+            user=self.client_user,
+            name='Webhook checkout integration',
+            key='tp_test_webhook_checkout_key',
+            webhookSecret='whsec_test_webhook_secret',
+            scopes=['checkout.write', 'checkout.read'],
+        )
+        mock_response = mock_urlopen.return_value.__enter__.return_value
+        mock_response.status = 200
+        response = self.client.post(
+            '/api/v1/checkout/sessions/',
+            {
+                'order_id': 'webhook-order-1001',
+                'title': 'Webhook order',
+                'amount': '100.00',
+                'currency': 'UGX',
+                'webhook_url': 'https://merchant.example/hooks/trustpay',
+            },
+            content_type='application/json',
+            HTTP_AUTHORIZATION=f'Api-Key {api_key.key}',
+        )
+        session = CheckoutSession.objects.get(pk=response.json()['id'])
+
+        self.client.post(
+            f'/checkout/{session.token}/',
+            {'customer_name': 'Test Buyer', 'customer_email': 'buyer@example.com', 'channel': 'card_gateway'},
+        )
+
+        self.assertTrue(mock_urlopen.called)
+        webhook_request = mock_urlopen.call_args.args[0]
+        self.assertTrue(webhook_request.headers['X-trustpay-signature'].startswith('sha256='))
 
     def test_checkout_session_creation_renders_success_page(self):
         self.client_user.set_password('Pass12345!')

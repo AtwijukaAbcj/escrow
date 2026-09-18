@@ -1,6 +1,12 @@
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
+import hashlib
+import hmac
+import json
 import secrets
+from urllib.parse import urlsplit
+from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction as db_transaction
@@ -9,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -16,7 +23,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from users.authentication import APIKeyAuthentication
-from .models import CheckoutSession, PaymentRecord, Transaction
+from .models import CheckoutSession, ExternalWebhookDelivery, PaymentRecord, Transaction
 from .services import apply_action
 
 
@@ -30,12 +37,72 @@ def _session_payload(request, session):
         'id': session.pk,
         'token': session.token,
         'status': session.status,
+        'transaction_status': session.transaction.status,
+        'funding_status': session.transaction.fundingStatus,
         'external_reference': session.externalReference,
         'amount': str(session.amount),
         'currency': session.currency,
         'expires_at': session.expiresAt.isoformat() if session.expiresAt else None,
         'checkout_url': request.build_absolute_uri(reverse('checkout-hosted', kwargs={'token': session.token})),
+        'merchant_origin': session.merchantOrigin,
     }
+
+
+def _send_checkout_webhook(session):
+    if not session.webhookUrl:
+        return
+    signing_key = session.createdBy.api_keys.filter(is_active=True).order_by('-created_at').first()
+    if not signing_key or not signing_key.webhookSecret:
+        return
+    event_id = f'evt_{secrets.token_urlsafe(18)}'
+    payload = {
+        'event': 'checkout.payment_submitted',
+        'session_id': session.pk,
+        'transaction_id': session.transaction_id,
+        'external_reference': session.externalReference,
+        'status': session.status,
+        'amount': str(session.amount),
+        'currency': session.currency,
+        'event_id': event_id,
+    }
+    delivery = ExternalWebhookDelivery.objects.create(
+        session=session,
+        eventId=event_id,
+        event='checkout.payment_submitted',
+        payload=payload,
+    )
+    body = json.dumps(payload, separators=(',', ':')).encode('utf-8')
+    timestamp = str(int(timezone.now().timestamp()))
+    signed_payload = f'{timestamp}.{body.decode("utf-8")}'.encode('utf-8')
+    signature = hmac.new(
+        signing_key.webhookSecret.encode('utf-8'),
+        signed_payload,
+        hashlib.sha256,
+    ).hexdigest()
+    request = Request(
+        session.webhookUrl,
+        data=body,
+        headers={
+            'Content-Type': 'application/json',
+            'User-Agent': 'TrustPay-Webhook/1.0',
+            'X-TrustPay-Timestamp': timestamp,
+            'X-TrustPay-Signature': f'sha256={signature}',
+        },
+        method='POST',
+    )
+    try:
+        delivery.attempts += 1
+        delivery.save(update_fields=['attempts'])
+        with urlopen(request, timeout=5) as response:
+            if response.status >= 300:
+                raise URLError(f'webhook returned HTTP {response.status}')
+        delivery.status = 'delivered'
+        delivery.deliveredAt = timezone.now()
+        delivery.save(update_fields=['status', 'deliveredAt'])
+    except (URLError, OSError) as exc:
+        delivery.status = 'failed'
+        delivery.lastError = str(exc)
+        delivery.save(update_fields=['status', 'lastError'])
 
 
 @api_view(['POST'])
@@ -45,6 +112,21 @@ def checkout_session_create(request):
     if not _has_scope(request, 'checkout.write'):
         return Response({'detail': 'The API key requires the checkout.write scope.'}, status=status.HTTP_403_FORBIDDEN)
     data = request.data or {}
+    merchant_origin = str(data.get('merchant_origin', '')).strip().rstrip('/')
+    if merchant_origin:
+        parsed_origin = urlsplit(merchant_origin)
+        if parsed_origin.scheme not in ('http', 'https') or not parsed_origin.netloc or parsed_origin.path not in ('', '/') or parsed_origin.query or parsed_origin.fragment:
+            return Response({'detail': 'merchant_origin must be an HTTP or HTTPS origin.'}, status=status.HTTP_400_BAD_REQUEST)
+        if request.auth.allowedOrigins and merchant_origin not in [origin.rstrip('/') for origin in request.auth.allowedOrigins]:
+            return Response({'detail': 'merchant_origin is not allowlisted for this API key.'}, status=status.HTTP_403_FORBIDDEN)
+    idempotency_key = request.headers.get('Idempotency-Key', '').strip() or None
+    if idempotency_key:
+        existing_session = CheckoutSession.objects.filter(
+            createdBy=request.user,
+            idempotencyKey=idempotency_key,
+        ).first()
+        if existing_session:
+            return Response(_session_payload(request, existing_session) | {'transaction_id': existing_session.transaction_id})
     transaction_id = str(data.get('transaction_id', '')).strip()
     if not transaction_id:
         transaction_id = str(data.get('order_id', '')).strip()
@@ -97,6 +179,8 @@ def checkout_session_create(request):
     session = CheckoutSession.objects.create(
         transaction=transaction,
         createdBy=request.user,
+        merchantOrigin=merchant_origin,
+        idempotencyKey=idempotency_key,
         token=secrets.token_urlsafe(32),
         externalReference=str(data.get('external_reference', '')).strip()[:128],
         buyerName=str(data.get('buyer_name', '')).strip()[:255],
@@ -148,14 +232,19 @@ def checkout_session_create_page(request, transaction_id):
     return render(request, 'checkout_session_form.html', {'transaction': transaction})
 
 
+@xframe_options_exempt
 @csrf_protect
 def checkout_hosted_view(request, token):
     session = get_object_or_404(CheckoutSession.objects.select_related('transaction'), token=token)
+    response_headers = {'Content-Security-Policy': f"frame-ancestors {session.merchantOrigin}"} if session.merchantOrigin else {'X-Frame-Options': 'DENY'}
     if session.status != 'open' or session.expiresAt and session.expiresAt <= timezone.now():
         if session.status == 'open':
             session.status = 'expired'
             session.save(update_fields=['status', 'updatedAt'])
-        return render(request, 'checkout_expired.html', {'session': session})
+        response = render(request, 'checkout_expired.html', {'session': session})
+        for name, value in response_headers.items():
+            response[name] = value
+        return response
     transaction = session.transaction
     if request.method == 'POST':
         channel = request.POST.get('channel', 'card_gateway')
@@ -163,9 +252,15 @@ def checkout_hosted_view(request, token):
         customer_name = request.POST.get('customer_name', '').strip()
         customer_email = request.POST.get('customer_email', '').strip()
         if not customer_name or not customer_email:
-            return render(request, 'checkout.html', {'session': session, 'transaction': transaction, 'error': 'Enter your name and email to continue.'})
+            response = render(request, 'checkout.html', {'session': session, 'transaction': transaction, 'error': 'Enter your name and email to continue.'})
+            for name, value in response_headers.items():
+                response[name] = value
+            return response
         if PaymentRecord.objects.filter(reference=reference).exists():
-            return render(request, 'checkout.html', {'session': session, 'transaction': transaction, 'error': 'That payment reference has already been used.'})
+            response = render(request, 'checkout.html', {'session': session, 'transaction': transaction, 'error': 'That payment reference has already been used.'})
+            for name, value in response_headers.items():
+                response[name] = value
+            return response
         try:
             PaymentRecord.objects.create(
                 transaction=transaction,
@@ -185,10 +280,18 @@ def checkout_hosted_view(request, token):
             else:
                 apply_action(transaction.id, transaction.buyer.user, 'fund')
         except (PermissionDenied, ValidationError) as exc:
-            return render(request, 'checkout.html', {'session': session, 'transaction': transaction, 'error': str(exc)})
+            response = render(request, 'checkout.html', {'session': session, 'transaction': transaction, 'error': str(exc)})
+            for name, value in response_headers.items():
+                response[name] = value
+            return response
         session.buyerName = customer_name
         session.buyerEmail = customer_email
         session.status = 'payment_submitted'
         session.save(update_fields=['buyerName', 'buyerEmail', 'status', 'updatedAt'])
-        return render(request, 'checkout_success.html', {'session': session, 'transaction': transaction})
-    return render(request, 'checkout.html', {'session': session, 'transaction': transaction})
+        _send_checkout_webhook(session)
+        response = render(request, 'checkout_success.html', {'session': session, 'transaction': transaction})
+    else:
+        response = render(request, 'checkout.html', {'session': session, 'transaction': transaction})
+    for name, value in response_headers.items():
+        response[name] = value
+    return response

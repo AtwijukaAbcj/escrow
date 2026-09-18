@@ -375,11 +375,16 @@ def api_key_list_create(request):
         return Response({'detail': 'scopes must be a list.'}, status=status.HTTP_400_BAD_REQUEST)
 
     key_value = f"tp_{request.user.pk}_{get_random_string(length=24)}"
-    key = APIKey.objects.create(user=request.user, name=name, key=key_value, scopes=scopes)
+    allowed_origins = data.get('allowed_origins') or []
+    if not isinstance(allowed_origins, list) or any(not isinstance(origin, str) for origin in allowed_origins):
+        return Response({'detail': 'allowed_origins must be a list of strings.'}, status=status.HTTP_400_BAD_REQUEST)
+    key = APIKey.objects.create(user=request.user, name=name, key=key_value, scopes=scopes, webhookSecret=f"whsec_{get_random_string(length=40)}", allowedOrigins=allowed_origins)
     return Response({
         'id': key.id,
         'name': key.name,
         'key': key.key,
+        'webhook_secret': key.webhookSecret,
+        'allowed_origins': key.allowedOrigins,
         'scopes': key.scopes,
         'is_active': key.is_active,
         'created_at': key.created_at.isoformat(),

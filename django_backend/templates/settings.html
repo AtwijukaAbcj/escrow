@@ -12,18 +12,20 @@
 
 <div class="tp-settings-layout">
     <aside class="tp-card tp-settings-nav">
-        <a class="active" href="#profile"><i data-lucide="user-round"></i>Profile</a>
-        <a href="#notifications"><i data-lucide="bell"></i>Notifications</a>
-        <a href="#workflow"><i data-lucide="sliders-horizontal"></i>Workflow</a>
-        <a href="#payments"><i data-lucide="credit-card"></i>Payments</a>
-        <a href="#merchant"><i data-lucide="store"></i>Merchant portal</a>
-        <a href="#security"><i data-lucide="shield-check"></i>Security</a>
+        <a class="active" href="#profile" data-settings-tab="profile"><i data-lucide="user-round"></i>Profile</a>
+        <a href="#notifications" data-settings-tab="notifications"><i data-lucide="bell"></i>Notifications</a>
+        <a href="#workflow" data-settings-tab="workflow"><i data-lucide="sliders-horizontal"></i>Workflow</a>
+        <a href="#payments" data-settings-tab="payments"><i data-lucide="credit-card"></i>Payments</a>
+        <a href="#merchant" data-settings-tab="merchant"><i data-lucide="store"></i>Merchant portal</a>
+        <a href="#api" data-settings-tab="api"><i data-lucide="code-2"></i>API credentials</a>
+        <a href="#security" data-settings-tab="security"><i data-lucide="shield-check"></i>Security</a>
+        {% if email_form %}<a href="#email" data-settings-tab="email"><i data-lucide="mail"></i>Email server</a>{% endif %}
     </aside>
 
     <div class="tp-settings-content">
         <form method="post">
             {% csrf_token %}
-            <section class="tp-card tp-section" id="profile">
+            <section class="tp-card tp-section" id="profile" data-settings-section>
                 <div class="tp-settings-heading">
                     <div>
                         <h2>Profile</h2>
@@ -35,11 +37,11 @@
                     <div class="tp-field"><label for="first_name">First name</label><input id="first_name" name="first_name" value="{{ user.first_name }}"></div>
                     <div class="tp-field"><label for="last_name">Last name</label><input id="last_name" name="last_name" value="{{ user.last_name }}"></div>
                     <div class="tp-field"><label for="email">Email</label><input id="email" type="email" name="email" value="{{ user.email }}"></div>
-                    <div class="tp-field"><label>Role</label><input value="{{ profile.get_role_display }}" disabled></div>
+                    <div class="tp-field"><label for="role">Role</label>{% if can_edit_role %}<select id="role" name="role">{% for value,label in role_choices %}<option value="{{ value }}"{% if profile.role == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>{% else %}<input id="role" value="{{ display_role }}" disabled>{% endif %}</div>
                 </div>
             </section>
 
-            <section class="tp-card tp-section" id="notifications">
+            <section class="tp-card tp-section" id="notifications" data-settings-section>
                 <div class="tp-settings-heading">
                     <div>
                         <h2>Notifications</h2>
@@ -52,7 +54,7 @@
                 </div>
             </section>
 
-            <section class="tp-card tp-section" id="workflow">
+            <section class="tp-card tp-section" id="workflow" data-settings-section>
                 <div class="tp-settings-heading">
                     <div>
                         <h2>Workflow preferences</h2>
@@ -65,7 +67,7 @@
                 </div>
             </section>
 
-            <section class="tp-card tp-section" id="payments">
+            <section class="tp-card tp-section" id="payments" data-settings-section>
                 <div class="tp-settings-heading">
                     <div>
                         <h2>Payment integrations</h2>
@@ -89,7 +91,14 @@
             </div>
         </form>
 
-        <section class="tp-card tp-section" id="merchant">
+        {% if email_form %}
+        <section class="tp-card tp-section" id="email" data-settings-section>
+            <div class="tp-settings-heading"><div><h2>Email server</h2><p class="tp-muted">Configure SMTP delivery for login verification codes and email notifications.</p></div><i data-lucide="mail"></i></div>
+            <form method="post"><input type="hidden" name="action" value="save_email_configuration">{% csrf_token %}<div class="tp-form-grid">{% for field in email_form %}<div class="tp-field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><p class="tp-muted">Use SSL for port 465. Use TLS for port 587. The password is never displayed after saving.</p><button class="tp-btn" type="submit"><i data-lucide="save"></i>Save email settings</button></form>
+        </section>
+        {% endif %}
+
+        <section class="tp-card tp-section" id="merchant" data-settings-section>
             <div class="tp-settings-heading">
                 <div>
                     <h2>Merchant portal</h2>
@@ -125,7 +134,40 @@
             {% endif %}
         </section>
 
-        <section class="tp-card tp-section" id="security">
+        <section class="tp-card tp-section" id="api" data-settings-section>
+            <div class="tp-settings-heading">
+                <div>
+                    <h2>API credentials</h2>
+                    <p class="tp-muted">Create and manage server-side credentials for external platform integrations.</p>
+                </div>
+                <i data-lucide="code-2"></i>
+            </div>
+
+            <div class="tp-settings-block">
+                <div class="tp-settings-block__heading">
+                    <h3>Integration keys</h3>
+                    <a class="tp-btn tp-btn--secondary" href="{% url 'api-docs' %}"><i data-lucide="book-open"></i>Integration guide</a>
+                </div>
+                <p class="tp-muted">Keep API keys and webhook secrets on your server. Never expose them in browser JavaScript.</p>
+
+                <form method="post" class="tp-inline-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="generate_api_key">
+                    <div class="tp-form-grid tp-form-grid--compact">
+                        <div class="tp-field"><label for="key_name">Key name</label><input id="key_name" name="key_name" placeholder="External checkout integration"></div>
+                        <div class="tp-field"><label>Scopes</label><label class="tp-check-row"><input type="checkbox" name="scopes" value="checkout.write" checked> <span>checkout.write</span></label><label class="tp-check-row"><input type="checkbox" name="scopes" value="checkout.read" checked> <span>checkout.read</span></label></div>
+                        <div class="tp-field"><label for="allowed_origin">Embedded merchant origin</label><input id="allowed_origin" name="allowed_origin" type="url" placeholder="https://merchant.example"><small class="tp-muted">Only this origin may embed its checkout sessions.</small></div>
+                    </div>
+                    <button class="tp-btn" type="submit">Generate key</button>
+                </form>
+
+                {% if new_api_key %}<div class="tp-api-key-box"><strong>New API key</strong><div class="tp-api-key-box__value"><p id="new-api-key-value">{{ new_api_key }}</p><button class="tp-btn tp-btn--secondary" type="button" data-copy-api-key="new-api-key-value"><i data-lucide="copy"></i>Copy key</button></div><small class="tp-muted">Copy this immediately. It will not be shown again after you leave or refresh this page.</small>{% if new_webhook_secret %}<strong>Webhook signing secret</strong><p>{{ new_webhook_secret }}</p>{% endif %}</div>{% endif %}
+
+                {% if api_keys %}<div class="tp-list-stack tp-list-stack--tight">{% for key in api_keys %}<div class="tp-row-card"><div><strong>{{ key.name }}</strong><div class="tp-muted">{{ key.scopes|join:", " }} · {% if key.is_active %}Active{% else %}Revoked{% endif %} · {{ key.allowedOrigins|join:", " }}</div></div>{% if key.is_active %}<form method="post" class="tp-inline-form tp-inline-form--compact">{% csrf_token %}<input type="hidden" name="action" value="revoke_api_key"><input type="hidden" name="key_id" value="{{ key.id }}"><button class="tp-btn tp-btn--secondary" type="submit">Revoke</button></form>{% endif %}</div>{% endfor %}</div>{% else %}<p class="tp-muted">No API keys created yet.</p>{% endif %}
+            </div>
+        </section>
+
+        <section class="tp-card tp-section" id="security" data-settings-section>
             <div class="tp-settings-heading">
                 <div>
                     <h2>Security</h2>
@@ -139,66 +181,6 @@
                 <a class="tp-btn tp-btn--secondary" href="{% url 'logout' %}">Sign out</a>
             </div>
 
-            <div class="tp-settings-divider"></div>
-
-            <div class="tp-settings-block">
-                <div class="tp-settings-block__heading">
-                    <h3>API credentials</h3>
-                    <a class="tp-btn tp-btn--secondary" href="{% url 'api-docs' %}"><i data-lucide="book-open"></i>Integration guide</a>
-                </div>
-                <p class="tp-muted">Create an API key for your server. Keep it private and use it only on your backend to create a unique checkout session.</p>
-
-                <form method="post" class="tp-inline-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="generate_api_key">
-                    <div class="tp-form-grid tp-form-grid--compact">
-                        <div class="tp-field">
-                            <label for="key_name">Key name</label>
-                            <input id="key_name" name="key_name" placeholder="External checkout integration">
-                        </div>
-                        <div class="tp-field">
-                            <label>Scopes</label>
-                            <label class="tp-check-row"><input type="checkbox" name="scopes" value="checkout.write" checked> <span>checkout.write</span></label>
-                            <label class="tp-check-row"><input type="checkbox" name="scopes" value="checkout.read" checked> <span>checkout.read</span></label>
-                        </div>
-                    </div>
-                    <button class="tp-btn" type="submit">Generate key</button>
-                </form>
-
-                {% if new_api_key %}
-                    <div class="tp-api-key-box">
-                        <strong>New API key</strong>
-                        <div class="tp-api-key-box__value">
-                            <p id="new-api-key-value">{{ new_api_key }}</p>
-                            <button class="tp-btn tp-btn--secondary" type="button" data-copy-api-key="new-api-key-value"><i data-lucide="copy"></i>Copy key</button>
-                        </div>
-                        <small class="tp-muted">Copy this immediately. It will not be shown again after you leave or refresh this page.</small>
-                    </div>
-                {% endif %}
-
-                {% if api_keys %}
-                    <div class="tp-list-stack tp-list-stack--tight">
-                        {% for key in api_keys %}
-                            <div class="tp-row-card">
-                                <div>
-                                    <strong>{{ key.name }}</strong>
-                                    <div class="tp-muted">{{ key.scopes|join:", " }} · {% if key.is_active %}Active{% else %}Revoked{% endif %}</div>
-                                </div>
-                                {% if key.is_active %}
-                                    <form method="post" class="tp-inline-form tp-inline-form--compact">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="revoke_api_key">
-                                        <input type="hidden" name="key_id" value="{{ key.id }}">
-                                        <button class="tp-btn tp-btn--secondary" type="submit">Revoke</button>
-                                    </form>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="tp-muted">No API keys created yet.</p>
-                {% endif %}
-            </div>
         </section>
     </div>
 </div>
@@ -211,4 +193,32 @@
     });
 </script>
 {% endif %}
+<script>
+    (function () {
+        const sections = Array.from(document.querySelectorAll('[data-settings-section]'));
+        const tabs = Array.from(document.querySelectorAll('[data-settings-tab]'));
+
+        function showSection(sectionId, updateHash) {
+            const selectedId = sections.some(section => section.id === sectionId) ? sectionId : 'profile';
+            sections.forEach(section => {
+                section.hidden = section.id !== selectedId;
+            });
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.settingsTab === selectedId);
+            });
+            if (updateHash && window.location.hash !== `#${selectedId}`) {
+                window.history.replaceState(null, '', `#${selectedId}`);
+            }
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', event => {
+                event.preventDefault();
+                showSection(tab.dataset.settingsTab, true);
+            });
+        });
+        window.addEventListener('hashchange', () => showSection(window.location.hash.slice(1), false));
+        showSection(window.location.hash.slice(1), false);
+    }());
+</script>
 {% endblock %}

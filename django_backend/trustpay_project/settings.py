@@ -106,3 +106,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
+
+LOGIN_OTP_ENABLED = os.getenv('LOGIN_OTP_ENABLED', 'true').lower() == 'true'
+LOGIN_OTP_TTL_MINUTES = int(os.getenv('LOGIN_OTP_TTL_MINUTES', '10'))
+LOGIN_OTP_MAX_ATTEMPTS = int(os.getenv('LOGIN_OTP_MAX_ATTEMPTS', '5'))

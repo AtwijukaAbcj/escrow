@@ -65,6 +65,20 @@
             </form>
         {% endif %}
     {% endif %}
+    {% if can_verify and milestone.status == 'under_review' %}
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
+            <form method="post" action="{% url 'milestone-action' milestone.pk 'milestone_request_changes' %}">
+                {% csrf_token %}
+                <input type="hidden" name="reason" value="Evidence requires changes before approval.">
+                <button class="tp-btn tp-btn--secondary" type="submit">Request changes</button>
+            </form>
+            <form method="post" action="{% url 'milestone-action' milestone.pk 'milestone_reject' %}">
+                {% csrf_token %}
+                <input type="hidden" name="reason" value="Milestone rejected during verification.">
+                <button class="tp-btn tp-btn--secondary" type="submit">Reject milestone</button>
+            </form>
+        </div>
+    {% endif %}
 </section>
 
 <!-- Two-Column Grid: Evidence & Verification -->

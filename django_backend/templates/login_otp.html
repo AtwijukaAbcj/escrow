@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}Verify sign in | TrustPay Africa{% endblock %}
+{% block content %}
+<div class="login-shell"><section class="login-form-panel"><a class="login-brand" href="{% url 'landing' %}"><span class="login-brand__mark">T</span><span>TrustPay Africa</span></a><h1>Check your email.</h1><p class="login-intro">Enter the six-digit code we sent to your email address to finish signing in.</p>{% if error %}<div class="tp-form-error">{{ error }}</div>{% endif %}<form method="post">{% csrf_token %}<div class="login-field"><label for="code">Verification code</label><input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></div><button class="tp-btn login-submit" type="submit">Verify and continue</button></form>{% if remaining_attempts is not None %}<p class="tp-muted">{{ remaining_attempts }} attempts remaining.</p>{% endif %}<p class="login-create"><a href="{% url 'login' %}?restart=1">Start over</a></p></section></div>
+{% endblock %}

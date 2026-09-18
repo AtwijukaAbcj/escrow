@@ -632,10 +632,10 @@ class Milestone(models.Model):
         """Return the list of valid statuses this milestone can transition to."""
         valid_transitions = {
             'pending': ['in_progress', 'disputed'],
-            'in_progress': ['submitted', 'disputed'],
-            'submitted': ['under_review', 'disputed'],
-            'under_review': ['approved', 'changes_required', 'rejected', 'disputed'],
-            'changes_required': ['submitted', 'disputed'],
+            'in_progress': ['submitted', 'approved', 'release_eligible', 'disputed'],
+            'submitted': ['under_review', 'approved', 'release_eligible', 'disputed'],
+            'under_review': ['approved', 'release_eligible', 'changes_required', 'rejected', 'disputed'],
+            'changes_required': ['submitted', 'approved', 'release_eligible', 'disputed'],
             'approved': ['release_eligible', 'disputed'],
             'release_eligible': ['paid', 'disputed'],
             'paid': ['disputed'],
@@ -909,6 +909,8 @@ class CheckoutSession(models.Model):
 
     transaction = models.ForeignKey(Transaction, related_name='checkout_sessions', on_delete=models.CASCADE)
     createdBy = models.ForeignKey(User, related_name='checkout_sessions', on_delete=models.PROTECT)
+    merchantOrigin = models.URLField(blank=True)
+    idempotencyKey = models.CharField(max_length=255, null=True, blank=True)
     token = models.CharField(max_length=128, unique=True)
     externalReference = models.CharField(max_length=128, blank=True)
     buyerName = models.CharField(max_length=255, blank=True)
@@ -924,8 +926,34 @@ class CheckoutSession(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('createdBy', 'idempotencyKey'),
+                condition=models.Q(idempotencyKey__isnull=False),
+                name='unique_checkout_idempotency_key',
+            ),
+        ]
+
     def __str__(self):
         return f'{self.transaction_id} checkout {self.externalReference or self.pk}'
+
+
+class ExternalWebhookDelivery(models.Model):
+    STATUS_CHOICES = [('pending', 'Pending'), ('delivered', 'Delivered'), ('failed', 'Failed')]
+
+    session = models.ForeignKey(CheckoutSession, related_name='webhook_deliveries', on_delete=models.CASCADE)
+    eventId = models.CharField(max_length=64, unique=True)
+    event = models.CharField(max_length=100)
+    payload = models.JSONField(default=dict)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default='pending')
+    attempts = models.PositiveIntegerField(default=0)
+    lastError = models.TextField(blank=True)
+    deliveredAt = models.DateTimeField(null=True, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-createdAt',)
 
 
 class EscrowLedgerEntry(models.Model):

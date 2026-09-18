@@ -1,5 +1,6 @@
 from .services import ACTION_RULES, apply_action, apply_dispute_action, apply_milestone_action, expire_overdue_transactions, open_dispute, resolve_dispute, resolve_document_requirements, sync_party_compliance_status, verify_document
 from .models import Contract, Document, DocumentCategory, DocumentRequirement, DocumentType, DisputeResolution, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentInstruction, PaymentRecord, PesapalConfiguration, Transaction, TransactionDispute, UserProfile, VerificationHistory, VerifierRole
+from datetime import timedelta
 from decimal import Decimal
 
 from rest_framework.views import APIView
@@ -19,6 +20,8 @@ from uuid import uuid4
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.conf import settings
+from django.contrib.auth.hashers import check_password, make_password
 from django.utils.crypto import get_random_string
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpResponse, HttpResponseForbidden
@@ -29,7 +32,9 @@ from django.utils.text import slugify
 from django.utils.html import escape
 from functools import wraps
 from users.services import has_permission, permission_required
-from users.models import UserSettings
+from users.models import EmailConfiguration, LoginOTP, UserSettings
+from users.forms_security import EmailConfigurationForm
+from users.delivery_providers import send_email
 from users.models import APIKey
 from .services import ACTION_RULES, apply_action, apply_dispute_action, apply_milestone_action, open_dispute, resolve_dispute
 from .pesapal import create_pesapal_order, encrypt_secret
@@ -77,10 +82,49 @@ def landing_view(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+    if request.GET.get('restart'):
+        request.session.pop('login_otp_id', None)
+        request.session.pop('login_otp_user_id', None)
+        request.session.pop('login_otp_next', None)
+    if request.session.get('login_otp_id'):
+        if request.method == 'POST':
+            otp = LoginOTP.objects.filter(pk=request.session['login_otp_id'], user_id=request.session.get('login_otp_user_id'), used=False).first()
+            if not otp or otp.expiresAt <= timezone.now() or otp.attempts >= settings.LOGIN_OTP_MAX_ATTEMPTS:
+                request.session.pop('login_otp_id', None)
+                request.session.pop('login_otp_user_id', None)
+                return render(request, 'login_otp.html', {'error': 'This verification code has expired. Please sign in again.'})
+            code = request.POST.get('code', '').strip()
+            if not check_password(code, otp.codeHash):
+                otp.attempts += 1
+                otp.save(update_fields=['attempts'])
+                return render(request, 'login_otp.html', {'error': 'The verification code is invalid.', 'remaining_attempts': max(settings.LOGIN_OTP_MAX_ATTEMPTS - otp.attempts, 0)})
+            otp.used = True
+            otp.save(update_fields=['used'])
+            user = otp.user
+            next_url = request.session.pop('login_otp_next', '') or 'dashboard'
+            request.session.pop('login_otp_id', None)
+            request.session.pop('login_otp_user_id', None)
+            login(request, user)
+            return redirect(next_url)
+        return render(request, 'login_otp.html')
     form = AuthenticationForm(request, data=request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        login(request, form.get_user())
-        return redirect(request.GET.get('next') or 'dashboard')
+        user = form.get_user()
+        if not user.email:
+            form.add_error(None, 'A verified email address is required for two-step login.')
+        else:
+            code = get_random_string(length=6, allowed_chars='0123456789')
+            otp = LoginOTP.objects.create(user=user, codeHash=make_password(code), expiresAt=timezone.now() + timedelta(minutes=settings.LOGIN_OTP_TTL_MINUTES))
+            try:
+                send_email(user.email, 'Your TrustPay Africa login code', f'Your one-time login code is {code}. It expires in {settings.LOGIN_OTP_TTL_MINUTES} minutes.')
+            except Exception:
+                otp.delete()
+                form.add_error(None, 'The verification email could not be sent. Contact an administrator.')
+            else:
+                request.session['login_otp_id'] = otp.pk
+                request.session['login_otp_user_id'] = user.pk
+                request.session['login_otp_next'] = request.GET.get('next') or 'dashboard'
+                return redirect('login')
     return render(request, 'login.html', {'form': form})
 
 
@@ -920,6 +964,7 @@ def milestone_detail_view(request, milestone_id):
     profile = getattr(request.user, 'profile', None)
     can_submit = not is_staff_user(request.user) and (milestone.transaction.seller_id == getattr(profile, 'pk', None) or milestone.responsibleParticipant_id == getattr(profile, 'pk', None))
     can_approve = milestone.transaction.buyer_id == getattr(profile, 'pk', None)
+    can_verify = is_staff_user(request.user) or milestone.assignedVerifier_id == request.user.pk or bool(profile and milestone.transaction.participants.filter(user=profile, role='verifier').exists())
     next_action = None
     if can_submit and milestone.status in ('pending', 'changes_required'):
         next_action = 'milestone_start'
@@ -927,11 +972,11 @@ def milestone_detail_view(request, milestone_id):
         next_action = 'milestone_submit'
     elif can_approve and milestone.status == 'approved' and milestone.buyerApprovalRequired:
         next_action = 'milestone_approve'
-    elif is_staff_user(request.user) and milestone.status == 'under_review':
+    elif can_verify and milestone.status in ('submitted', 'under_review'):
         next_action = 'milestone_verify'
     elif is_staff_user(request.user) and milestone.status == 'release_eligible':
         next_action = 'milestone_release'
-    return render(request, 'milestone_detail.html', {'milestone': milestone, 'next_action': next_action, 'is_overdue': bool(milestone.dueDate and milestone.dueDate < timezone.localdate() and milestone.status not in ('paid', 'rejected')), 'can_submit': can_submit, 'can_approve': can_approve, 'missing_documents': transaction_document_checklist(milestone.transaction)})
+    return render(request, 'milestone_detail.html', {'milestone': milestone, 'next_action': next_action, 'is_overdue': bool(milestone.dueDate and milestone.dueDate < timezone.localdate() and milestone.status not in ('paid', 'rejected')), 'can_submit': can_submit, 'can_approve': can_approve, 'can_verify': can_verify, 'missing_documents': transaction_document_checklist(milestone.transaction)})
 
 
 @login_required
@@ -1305,17 +1350,40 @@ def settings_view(request):
     profile = getattr(request.user, 'profile', None)
     pesapal = PesapalConfiguration.objects.first()
     preferences_form = UserSettingsForm(request.POST or None, instance=preferences)
+    email_configuration = EmailConfiguration.objects.first()
+    email_form = EmailConfigurationForm(request.POST or None, instance=email_configuration) if request.user.is_staff or request.user.is_superuser else None
     merchant_transactions = Transaction.objects.filter(createdBy=request.user).select_related('buyer__party', 'seller__party').order_by('-createdAt')[:10]
     new_api_key = request.session.pop('new_api_key', None)
-    if request.method == 'POST' and request.POST.get('action') == 'generate_api_key':
+    new_webhook_secret = request.session.pop('new_webhook_secret', None)
+    if request.method == 'POST' and request.POST.get('action') == 'save_email_configuration':
+        if not request.user.is_staff and not request.user.is_superuser:
+            return HttpResponseForbidden('Only administrators can configure email delivery.')
+        if email_form.is_valid():
+            email_form.save()
+            return redirect('settings')
+    elif request.method == 'POST' and request.POST.get('action') == 'generate_api_key':
         scopes = request.POST.getlist('scopes') or ['checkout.write', 'checkout.read']
-        api_key = APIKey.objects.create(user=request.user, name=(request.POST.get('key_name') or 'External checkout integration')[:120], key=f'tp_{request.user.pk}_{get_random_string(length=32)}', scopes=scopes)
+        allowed_origin = request.POST.get('allowed_origin', '').strip().rstrip('/')
+        allowed_origins = [allowed_origin] if allowed_origin else []
+        api_key = APIKey.objects.create(
+            user=request.user,
+            name=(request.POST.get('key_name') or 'External checkout integration')[:120],
+            key=f'tp_{request.user.pk}_{get_random_string(length=32)}',
+            webhookSecret=f'whsec_{get_random_string(length=40)}',
+            allowedOrigins=allowed_origins,
+            scopes=scopes,
+        )
         request.session['new_api_key'] = api_key.key
+        request.session['new_webhook_secret'] = api_key.webhookSecret
         return redirect('settings')
     elif request.method == 'POST' and request.POST.get('action') == 'revoke_api_key':
         APIKey.objects.filter(pk=request.POST.get('key_id'), user=request.user).update(is_active=False)
         return redirect('settings')
     if request.method == 'POST' and preferences_form.is_valid():
+        requested_role = request.POST.get('role', '').strip()
+        if profile and (request.user.is_staff or request.user.is_superuser) and requested_role in dict(UserProfile.ROLE_CHOICES):
+            profile.role = requested_role
+            profile.save(update_fields=['role'])
         request.user.first_name = request.POST.get('first_name', '').strip()
         request.user.last_name = request.POST.get('last_name', '').strip()
         request.user.email = request.POST.get('email', '').strip()
@@ -1329,7 +1397,13 @@ def settings_view(request):
         'pesapal_configured': bool(pesapal and pesapal.consumerKeyCiphertext and pesapal.consumerSecretCiphertext),
         'api_keys': APIKey.objects.filter(user=request.user).order_by('-created_at'),
         'new_api_key': new_api_key,
+        'new_webhook_secret': new_webhook_secret,
         'merchant_transactions': merchant_transactions,
+        'email_form': email_form,
+        'email_configuration': email_configuration,
+        'role_choices': UserProfile.ROLE_CHOICES,
+        'display_role': 'Admin' if request.user.is_superuser else profile.get_role_display() if profile else 'Unassigned',
+        'can_edit_role': bool(profile and (request.user.is_staff or request.user.is_superuser)),
     })
 
 
