@@ -2,6 +2,8 @@
 {% block title %}Settings | TrustPay Africa{% endblock %}
 {% block content %}
 
+{% if messages %}<div class="tp-stack-actions" style="margin-bottom: 18px;">{% for message in messages %}<div class="{% if message.tags == 'error' %}tp-form-error{% else %}tp-badge tp-badge--success{% endif %}">{{ message }}</div>{% endfor %}</div>{% endif %}
+
 <div class="tp-page-heading">
     <div>
         <p class="tp-eyebrow">Workspace configuration</p>
@@ -94,7 +96,7 @@
         {% if email_form %}
         <section class="tp-card tp-section" id="email" data-settings-section>
             <div class="tp-settings-heading"><div><h2>Email server</h2><p class="tp-muted">Configure SMTP delivery for login verification codes and email notifications.</p></div><i data-lucide="mail"></i></div>
-            <form method="post"><input type="hidden" name="action" value="save_email_configuration">{% csrf_token %}<div class="tp-form-grid">{% for field in email_form %}<div class="tp-field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>{% endfor %}</div><p class="tp-muted">Use SSL for port 465. Use TLS for port 587. The password is never displayed after saving.</p><button class="tp-btn" type="submit"><i data-lucide="save"></i>Save email settings</button></form>
+            <form method="post"><input type="hidden" name="action" value="save_email_configuration">{% csrf_token %}<div class="tp-form-grid">{% for field in email_form %}<div class="tp-field">{{ field.label_tag }}{{ field }}{% for error in field.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}</div>{% endfor %}<div class="tp-field"><label for="test_email_to">Test recipient email</label><input id="test_email_to" name="test_email_to" type="email" value="{{ user.email }}" placeholder="you@example.com"><small class="tp-muted">The test message will be sent to this address.</small></div></div><p class="tp-muted">Use SSL for port 465, or TLS for port 587. Do not enable both. The password is never displayed after saving.</p><div class="tp-stack-actions"><button class="tp-btn" type="submit"><i data-lucide="save"></i>Save email settings</button><button class="tp-btn tp-btn--secondary" type="submit" formaction="{% url 'settings' %}" name="action" value="test_email_configuration"><i data-lucide="send"></i>Send test email</button></div></form>
         </section>
         {% endif %}
 

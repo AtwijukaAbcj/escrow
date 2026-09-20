@@ -18,6 +18,7 @@ from django.db import models, transaction as db_transaction
 from django.shortcuts import redirect
 from uuid import uuid4
 from django.contrib.auth import login, logout
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.conf import settings
@@ -1364,6 +1365,22 @@ def settings_view(request):
         if email_form.is_valid():
             email_form.save()
             return redirect('settings')
+    elif request.method == 'POST' and request.POST.get('action') == 'test_email_configuration':
+        if not request.user.is_staff and not request.user.is_superuser:
+            return HttpResponseForbidden('Only administrators can test email delivery.')
+        test_recipient = request.POST.get('test_email_to', '').strip() or request.user.email
+        try:
+            forms.EmailField().clean(test_recipient)
+        except forms.ValidationError:
+            messages.error(request, 'Enter a valid test recipient email address.')
+        else:
+            try:
+                send_email(test_recipient, 'TrustPay Africa SMTP test', 'Your TrustPay Africa email server settings are working.')
+            except Exception as exc:
+                messages.error(request, f'Email test failed: {exc}')
+            else:
+                messages.success(request, f'Test email sent to {test_recipient}.')
+        return redirect('/settings/#email')
     elif request.method == 'POST' and request.POST.get('action') == 'generate_api_key':
         scopes = request.POST.getlist('scopes') or ['checkout.write', 'checkout.read']
         allowed_origin = request.POST.get('allowed_origin', '').strip().rstrip('/')

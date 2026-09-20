@@ -153,6 +153,18 @@ class RbacIntegrationTests(TestCase):
         self.assertRedirects(saved, reverse('settings'))
         self.assertTrue(EmailConfiguration.objects.get().enabled)
 
+    @patch('escrow.views.send_email')
+    def test_admin_can_send_email_configuration_test(self, mock_send_email):
+        self.admin.email = 'admin@example.com'
+        self.admin.save(update_fields=['email'])
+        EmailConfiguration.objects.create(host='smtp.example.com', port=587, useTls=True, fromEmail='no-reply@example.com', enabled=True)
+        self.client.force_login(self.admin)
+
+        response = self.client.post(reverse('settings'), {'action': 'test_email_configuration'})
+
+        self.assertRedirects(response, '/settings/#email')
+        mock_send_email.assert_called_once_with('admin@example.com', 'TrustPay Africa SMTP test', 'Your TrustPay Africa email server settings are working.')
+
     def test_kyc_review_updates_party_compliance_state(self):
         party = Party.objects.create(id='kyc-review-party', displayName='KYC Review Party', role='buyer')
         KycSubmission.objects.create(
