@@ -255,6 +255,7 @@ def role_toggle(request, role_id):
 def user_roles(request, user_id):
     managed_user = get_object_or_404(User.objects.prefetch_related('assigned_roles__role'), pk=user_id)
     form = UserRolesForm(initial={'roles': managed_user.assigned_roles.values_list('role_id', flat=True)}, user=managed_user, actor=request.user)
+    modules = Module.objects.filter(is_active=True).order_by('name')
     if request.method == 'POST' and request.POST.get('action') == 'roles':
         form = UserRolesForm(request.POST, user=managed_user, actor=request.user)
         if form.is_valid():
@@ -263,10 +264,16 @@ def user_roles(request, user_id):
             managed_user.assigned_roles.exclude(role__in=new_roles).delete()
             for role in new_roles:
                 managed_user.assigned_roles.get_or_create(role=role, defaults={'assigned_by': request.user})
-            AuditLog.objects.create(actor=request.user, action='user.roles_changed', target_type='user', target_id=str(managed_user.pk), details={'from': sorted(old_roles), 'to': sorted(role.name for role in new_roles)})
+            selected_module_ids = {int(module_id) for module_id in request.POST.getlist('modules') if module_id.isdigit()}
+            selected_modules = modules.filter(pk__in=selected_module_ids)
+            managed_user.module_access.exclude(module__in=selected_modules).delete()
+            for module in selected_modules:
+                UserModuleAccess.objects.update_or_create(user=managed_user, module=module, defaults={'is_active': True, 'granted_by': request.user})
+            AuditLog.objects.create(actor=request.user, action='user.roles_changed', target_type='user', target_id=str(managed_user.pk), details={'from': sorted(old_roles), 'to': sorted(role.name for role in new_roles), 'modules': sorted(module.code for module in selected_modules)})
             return redirect('users:list')
-    effective = Permission.objects.filter(is_active=True, role_permissions__role__assigned_users__user=managed_user, role_permissions__role__is_active=True).distinct().order_by('module', 'code')
-    return render(request, 'users/user_roles.html', {'managed_user': managed_user, 'form': form, 'effective_permissions': effective})
+    accessible_module_ids = set(managed_user.module_access.filter(is_active=True).values_list('module_id', flat=True))
+    effective = Permission.objects.filter(is_active=True, role_permissions__role__assigned_users__user=managed_user, role_permissions__role__is_active=True, module__user_access__user=managed_user, module__user_access__is_active=True).distinct().order_by('module', 'code')
+    return render(request, 'users/user_roles.html', {'managed_user': managed_user, 'form': form, 'modules': modules, 'accessible_module_ids': accessible_module_ids, 'effective_permissions': effective})
 
 
 @api_view(['POST'])

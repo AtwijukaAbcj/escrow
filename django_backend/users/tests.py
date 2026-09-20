@@ -14,7 +14,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from escrow.models import CheckoutSession, Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
 from escrow.views import PaymentForm
 
-from .models import APIKey, AuditLog, EmailConfiguration, LoginOTP, Permission, Role, RolePermission, UserModuleAccess, UserRole
+from .models import APIKey, AuditLog, EmailConfiguration, LoginOTP, Module, Permission, Role, RolePermission, UserModuleAccess, UserRole
 from .services import has_permission
 from escrow.services import apply_action, apply_dispute_action, apply_milestone_action, expire_overdue_transactions, open_dispute, resolve_dispute, resolve_document_requirements, verify_document
 
@@ -85,6 +85,12 @@ class RbacIntegrationTests(TestCase):
         self.viewer.is_active = False
         self.viewer.save(update_fields=['is_active'])
         self.assertFalse(has_permission(self.client_user, 'transactions.view'))
+
+    def test_staff_account_has_administrative_permissions(self):
+        self.provider_user.is_staff = True
+        self.provider_user.save(update_fields=['is_staff'])
+
+        self.assertTrue(has_permission(self.provider_user, 'transactions.view'))
 
     def test_transaction_access_is_scoped_to_party(self):
         self.client.login(username='client-test', password='Pass12345!')
@@ -1080,12 +1086,23 @@ class RbacIntegrationTests(TestCase):
         self.assertContains(response, 'TrustPay Africa')
         self.assertContains(response, 'Setup')
 
-    def test_user_roles_screen_uses_only_role_assignment(self):
+    def test_user_roles_screen_manages_roles_and_module_access(self):
         self.client.force_login(self.admin)
         response = self.client.get(reverse('users:user-roles', args=[self.client_user.pk]))
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'Module access')
-        self.assertNotContains(response, 'Save module access')
+        self.assertContains(response, 'Module access')
+
+    def test_user_roles_screen_restricts_effective_permissions_by_module(self):
+        transactions_module = Module.objects.get(code='transactions')
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse('users:user-roles', args=[self.client_user.pk]),
+            {'action': 'roles', 'roles': [self.viewer.pk], 'modules': [transactions_module.pk]},
+        )
+        self.assertRedirects(response, reverse('users:list'))
+        self.assertTrue(UserModuleAccess.objects.filter(user=self.client_user, module=transactions_module, is_active=True).exists())
+        self.assertTrue(has_permission(self.client_user, 'transactions.view'))
+        self.assertFalse(has_permission(self.client_user, 'payments.manage'))
 
     def test_role_form_groups_permissions_by_module(self):
         self.client.force_login(self.admin)

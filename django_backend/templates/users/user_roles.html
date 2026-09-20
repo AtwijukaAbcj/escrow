@@ -22,6 +22,13 @@
             </div>
         </div>
         {% for error in form.roles.errors %}<div class="tp-form-error">{{ error }}</div>{% endfor %}
+        <div class="tp-permission-tree" style="margin-top:24px;">
+            <strong>Module access</strong>
+            <p class="tp-muted" style="margin:8px 0 16px;">Choose which feature areas this user can access. These limits apply even when users share the same role.</p>
+            <div class="tp-permission-list">
+                {% for module in modules %}<label><input type="checkbox" name="modules" value="{{ module.pk }}"{% if module.pk in accessible_module_ids %} checked{% endif %}> {{ module.name }}</label>{% empty %}<span>No active modules available.</span>{% endfor %}
+            </div>
+        </div>
         <div style="display:flex; justify-content:flex-end; margin-top:24px;"><button class="tp-btn" type="submit">Save roles</button></div>
     </form>
 </div>

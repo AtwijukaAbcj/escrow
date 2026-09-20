@@ -15,7 +15,7 @@ def active_roles(user):
 def has_permission(user, code):
     if not user or not user.is_authenticated or not user.is_active:
         return False
-    if user.is_superuser:
+    if user.is_superuser or user.is_staff:
         return True
     query = Permission.objects.filter(
         code=code,
@@ -43,7 +43,7 @@ def permission_required(code):
 def user_permission_codes(user):
     if not user or not user.is_authenticated or not user.is_active:
         return set()
-    if user.is_superuser:
+    if user.is_superuser or user.is_staff:
         return set(Permission.objects.filter(is_active=True).values_list('code', flat=True))
     return set(Permission.objects.filter(
         is_active=True,
