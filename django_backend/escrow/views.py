@@ -111,7 +111,7 @@ def login_view(request):
     form = AuthenticationForm(request, data=request.POST or None)
     if request.method == 'POST' and form.is_valid():
         user = form.get_user()
-        if user.is_superuser:
+        if user.is_superuser and not settings.ADMIN_LOGIN_OTP_REQUIRED:
             login(request, user)
             return redirect(request.GET.get('next') or 'dashboard')
         if not user.email:
