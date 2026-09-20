@@ -122,6 +122,13 @@ class RbacIntegrationTests(TestCase):
         otp.refresh_from_db()
         self.assertTrue(otp.used)
 
+    def test_superuser_can_login_without_email_otp(self):
+        response = self.client.post(reverse('login'), {'username': 'admin-test', 'password': 'Pass12345!'})
+
+        self.assertRedirects(response, reverse('dashboard'))
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+        self.assertFalse(LoginOTP.objects.filter(user=self.admin).exists())
+
     @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
     def test_invalid_login_otp_increments_attempts(self):
         self.client_user.email = 'client@example.com'
