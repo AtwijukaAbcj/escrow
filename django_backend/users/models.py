@@ -63,6 +63,19 @@ class UserModuleAccess(models.Model):
         constraints = [models.UniqueConstraint(fields=('user', 'module'), name='unique_user_module_access')]
 
 
+class UserPermissionOverride(models.Model):
+    EFFECT_CHOICES = [('grant', 'Grant'), ('deny', 'Deny')]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='permission_overrides')
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name='user_overrides')
+    effect = models.CharField(max_length=10, choices=EFFECT_CHOICES)
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='permission_overrides_assigned')
+    assigned_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=('user', 'permission'), name='unique_user_permission_override')]
+
+
 class RolePermission(models.Model):
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='role_permissions')
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name='role_permissions')

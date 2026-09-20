@@ -29,6 +29,13 @@
                 {% for module in modules %}<label><input type="checkbox" name="modules" value="{{ module.pk }}"{% if module.pk in accessible_module_ids %} checked{% endif %}> {{ module.name }}</label>{% empty %}<span>No active modules available.</span>{% endfor %}
             </div>
         </div>
+        <div class="tp-permission-tree" style="margin-top:24px;">
+            <strong>Action overrides</strong>
+            <p class="tp-muted" style="margin:8px 0 16px;">Use Role default normally. Grant adds an exception; Deny always wins. Module access is still required.</p>
+            <div class="tp-permission-list">
+                {% for row in permission_rows %}<label style="display:flex; justify-content:space-between; gap:16px; align-items:center;"><span><strong>{{ row.permission.code }}</strong><br><small>{{ row.permission.module.name }}</small></span><select name="permission_{{ row.permission.pk }}" style="max-width:140px;"><option value="">Role default</option><option value="grant"{% if row.effect == 'grant' %} selected{% endif %}>Grant</option><option value="deny"{% if row.effect == 'deny' %} selected{% endif %}>Deny</option></select></label>{% empty %}<span>No active permissions available.</span>{% endfor %}
+            </div>
+        </div>
         <div style="display:flex; justify-content:flex-end; margin-top:24px;"><button class="tp-btn" type="submit">Save roles</button></div>
     </form>
 </div>

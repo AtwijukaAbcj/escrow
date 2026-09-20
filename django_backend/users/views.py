@@ -15,9 +15,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from escrow.models import Party, UserProfile
 from .forms import ManagedUserCreationForm, RegistrationForm, RoleForm, UserRolesForm
-from .models import APIKey, AuditLog, Module, Notification, NotificationDelivery, Permission, Role, UserModuleAccess, UserRole
+from .models import APIKey, AuditLog, Module, Notification, NotificationDelivery, Permission, Role, UserModuleAccess, UserPermissionOverride, UserRole
 from .notification_service import dispatch_delivery, mark_read
-from .services import permission_required
+from .services import permission_required, user_permission_codes
 
 
 @login_required
@@ -269,11 +269,21 @@ def user_roles(request, user_id):
             managed_user.module_access.exclude(module__in=selected_modules).delete()
             for module in selected_modules:
                 UserModuleAccess.objects.update_or_create(user=managed_user, module=module, defaults={'is_active': True, 'granted_by': request.user})
-            AuditLog.objects.create(actor=request.user, action='user.roles_changed', target_type='user', target_id=str(managed_user.pk), details={'from': sorted(old_roles), 'to': sorted(role.name for role in new_roles), 'modules': sorted(module.code for module in selected_modules)})
+            UserPermissionOverride.objects.filter(user=managed_user).delete()
+            override_details = {}
+            for permission in Permission.objects.filter(is_active=True, module__is_active=True):
+                effect = request.POST.get(f'permission_{permission.pk}', '')
+                if effect in ('grant', 'deny'):
+                    UserPermissionOverride.objects.create(user=managed_user, permission=permission, effect=effect, assigned_by=request.user)
+                    override_details[permission.code] = effect
+            AuditLog.objects.create(actor=request.user, action='user.roles_changed', target_type='user', target_id=str(managed_user.pk), details={'from': sorted(old_roles), 'to': sorted(role.name for role in new_roles), 'modules': sorted(module.code for module in selected_modules), 'permission_overrides': override_details})
             return redirect('users:list')
     accessible_module_ids = set(managed_user.module_access.filter(is_active=True).values_list('module_id', flat=True))
-    effective = Permission.objects.filter(is_active=True, role_permissions__role__assigned_users__user=managed_user, role_permissions__role__is_active=True, module__user_access__user=managed_user, module__user_access__is_active=True).distinct().order_by('module', 'code')
-    return render(request, 'users/user_roles.html', {'managed_user': managed_user, 'form': form, 'modules': modules, 'accessible_module_ids': accessible_module_ids, 'effective_permissions': effective})
+    override_map = dict(managed_user.permission_overrides.values_list('permission_id', 'effect'))
+    permissions = Permission.objects.filter(is_active=True, module__is_active=True).select_related('module').order_by('module__name', 'code')
+    permission_rows = [{'permission': permission, 'effect': override_map.get(permission.pk, '')} for permission in permissions]
+    effective = Permission.objects.filter(is_active=True, code__in=user_permission_codes(managed_user)).select_related('module').order_by('module', 'code')
+    return render(request, 'users/user_roles.html', {'managed_user': managed_user, 'form': form, 'modules': modules, 'accessible_module_ids': accessible_module_ids, 'permission_rows': permission_rows, 'effective_permissions': effective})
 
 
 @api_view(['POST'])

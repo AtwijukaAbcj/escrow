@@ -14,7 +14,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from escrow.models import CheckoutSession, Contract, ContractSignature, Document, DocumentCategory, DocumentRequirement, DocumentRequirementHistory, DocumentType, EscrowLedgerEntry, KycSubmission, Milestone, Party, PaymentRecord, Transaction, TransactionDecision, TransactionDispute, TransactionParticipant, VerifierRole
 from escrow.views import PaymentForm
 
-from .models import APIKey, AuditLog, EmailConfiguration, LoginOTP, Module, Permission, Role, RolePermission, UserModuleAccess, UserRole
+from .models import APIKey, AuditLog, EmailConfiguration, LoginOTP, Module, Permission, Role, RolePermission, UserModuleAccess, UserPermissionOverride, UserRole
 from .services import has_permission
 from escrow.services import apply_action, apply_dispute_action, apply_milestone_action, expire_overdue_transactions, open_dispute, resolve_dispute, resolve_document_requirements, verify_document
 
@@ -1103,6 +1103,23 @@ class RbacIntegrationTests(TestCase):
         self.assertTrue(UserModuleAccess.objects.filter(user=self.client_user, module=transactions_module, is_active=True).exists())
         self.assertTrue(has_permission(self.client_user, 'transactions.view'))
         self.assertFalse(has_permission(self.client_user, 'payments.manage'))
+
+    def test_user_permission_deny_overrides_role_permission(self):
+        transactions_module = Module.objects.get(code='transactions')
+        UserModuleAccess.objects.update_or_create(user=self.client_user, module=transactions_module, defaults={'is_active': True})
+        UserPermissionOverride.objects.create(user=self.client_user, permission=self.view_permission, effect='deny', assigned_by=self.admin)
+
+        self.assertFalse(has_permission(self.client_user, 'transactions.view'))
+
+    def test_user_permission_grant_requires_module_access(self):
+        documents_permission = Permission.objects.filter(code='documents.view').first()
+        if documents_permission is None:
+            self.skipTest('documents.view permission is not seeded')
+        UserPermissionOverride.objects.create(user=self.client_user, permission=documents_permission, effect='grant', assigned_by=self.admin)
+
+        self.assertFalse(has_permission(self.client_user, 'documents.view'))
+        UserModuleAccess.objects.update_or_create(user=self.client_user, module=documents_permission.module, defaults={'is_active': True})
+        self.assertTrue(has_permission(self.client_user, 'documents.view'))
 
     def test_role_form_groups_permissions_by_module(self):
         self.client.force_login(self.admin)
